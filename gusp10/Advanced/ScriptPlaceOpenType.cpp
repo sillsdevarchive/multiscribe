@@ -63,13 +63,13 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 	}
 	if(IsGraphiteFont(hdc))
 	{
-		if(!psc)
-		{
-			WRAP_BEGIN(ScriptPlaceOpenType, LPFNSCRIPTPLACEOPENTYPE)
-			// only to setup the cache correctly:
-			hResult = ScriptPlaceOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,pwLogClust,pCharProps,cChars,pwGlyphs,pGlyphProps,cGlyphs,piAdvance,pGoffset,pABC);
-			WRAP_END_NO_RETURN
-		}
+		//if(!psc)
+		//{
+		//	WRAP_BEGIN(ScriptPlaceOpenType, LPFNSCRIPTPLACEOPENTYPE)
+		//	// only to setup the cache correctly:
+		//	hResult = ScriptPlaceOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,pwLogClust,pCharProps,cChars,pwGlyphs,pGlyphProps,cGlyphs,piAdvance,pGoffset,pABC);
+		//	WRAP_END_NO_RETURN
+		//}
 
 		TextSource textSource(pwcChars, cChars);
 		textSource.setRightToLeft(psa->fRTL);
@@ -128,12 +128,17 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 			assert(false);
 			//fallback
 			WRAP_BEGIN(ScriptPlaceOpenType, LPFNSCRIPTPLACEOPENTYPE)
-			// only to setup the cache correctly:
 			hResult = ScriptPlaceOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,pwLogClust,pCharProps,cChars,pwGlyphs,pGlyphProps,cGlyphs,piAdvance,pGoffset,pABC);
 			WRAP_END
 		}
 
-		if(pABC){
+		if(pABC){ //TODO
+			// really the segment should have public properties for
+			// members, m_dxsLeftOverhang, m_dxsRightOverhang and m_dxsVisibleWidth
+			gr::Rect boundingRect = seg.boundingRect();
+			pABC->abcA = static_cast<int>(ceil(boundingRect.left)); // space to leading edge (may be negative)
+			pABC->abcB = static_cast<UINT>(ceil(seg.advanceWidth())); // drawn portion
+			pABC->abcC = 0; // space to add to trailing edge (may be negative)
 		}
 		return S_OK;
 	}

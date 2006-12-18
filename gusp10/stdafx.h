@@ -30,7 +30,6 @@
 
 #define UNISCRIBE_OPENTYPE 0x0100
 
-// TODO: reference additional headers your program requires here
 #include <usp10.h>
 #include <assert.h>
 #include <stdio.h>

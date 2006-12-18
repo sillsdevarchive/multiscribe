@@ -29,26 +29,25 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 	__inout_ecount(1) SCRIPT_ANALYSIS           *psa,       // InOut Result of ScriptItemize (may have fNoGlyphIndex set)
 	__out_ecount_full(cGlyphs) int              *piAdvance, // Out   Advance wdiths
 	__out_ecount_full_opt(cGlyphs) GOFFSET      *pGoffset,  // Out   x,y offset for combining glyph
-	__out_ecount(1) ABC                         *pABC)     // Out   Composite ABC for the whole run (Optional)
+	__out_ecount(1) ABC                         *pABC)      // Out   Composite ABC for the whole run (Optional)
 {
 	if(!hdc){ //TODO: keep a cache
 		return E_PENDING;
 	}
 	if(IsGraphiteFont(hdc))
 	{
-		if(!psc)
-		{
-			WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
-			// only to setup the cache correctly:
-			hResult = ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
-			WRAP_END_NO_RETURN
-		}
+		//if(!psc)
+		//{
+		//	WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
+		//	// only to setup the cache correctly:
+		//	hResult = ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
+		//	WRAP_END_NO_RETURN
+		//}
 
 		TextSource * pTextSource = GetTextSource(pwGlyphs, cGlyphs);
 		if(!pTextSource){
 			//fallback
 			WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
-			// only to setup the cache correctly:
 			hResult = ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
 			WRAP_END
 		}
@@ -107,12 +106,17 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 			assert(false);
 			//fallback
 			WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
-			// only to setup the cache correctly:
 			hResult = ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
 			WRAP_END
 		}
 
-		if(pABC){
+		if(pABC){ //TODO
+			// really the segment should have public properties for
+			// members, m_dxsLeftOverhang, m_dxsRightOverhang and m_dxsVisibleWidth
+			gr::Rect boundingRect = seg.boundingRect();
+			pABC->abcA = static_cast<int>(ceil(boundingRect.left)); // space to leading edge (may be negative)
+			pABC->abcB = static_cast<UINT>(ceil(seg.advanceWidth())); // drawn portion
+			pABC->abcC = 0; // space to add to trailing edge (may be negative)
 		}
 		return S_OK;
 	}

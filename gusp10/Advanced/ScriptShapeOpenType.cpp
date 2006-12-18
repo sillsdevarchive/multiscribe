@@ -56,13 +56,13 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShapeOpenType(
 	}
 	if(IsGraphiteFont(hdc))
 	{
-		if(!psc)
-		{
-			WRAP_BEGIN(ScriptShapeOpenType, LPFNSCRIPTSHAPEOPENTYPE)
-			// only to setup the cache correctly:
-			hResult = ScriptShapeOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,cChars,cMaxGlyphs,pwLogClust,pCharProps,pwOutGlyphs,pOutGlyphProps,pcGlyphs);
-			WRAP_END_NO_RETURN
-		}
+		//if(!psc)
+		//{
+		//	WRAP_BEGIN(ScriptShapeOpenType, LPFNSCRIPTSHAPEOPENTYPE)
+		//	// only to setup the cache correctly:
+		//	hResult = ScriptShapeOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,cChars,cMaxGlyphs,pwLogClust,pCharProps,pwOutGlyphs,pOutGlyphProps,pcGlyphs);
+		//	WRAP_END_NO_RETURN
+		//}
 
 		 TextSource textSource(pwcChars, cChars);
 		 textSource.setRightToLeft(psa->fRTL);
@@ -117,9 +117,6 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShapeOpenType(
 		}
 
 		delete[] rgFirstGlyphOfCluster;
-
-//		TextSource * pTextSource = CreateTextSource(pwOutGlyphs, *pcGlyphs);
-//		*pTextSource = textSource;
 		return S_OK;
 	}
 	else {

@@ -95,6 +95,8 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringAnalyse(
 			}
 		}
 		else {
+			delete pgssa->pFont;
+			delete pgssa->pLayout;
 			FreeGraphiteScriptStringAnalysis(*pssa);
 		}
 	}
