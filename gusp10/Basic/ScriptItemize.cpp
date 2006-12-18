@@ -33,13 +33,13 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptItemize(
 	hResult = ScriptItemize(pwcInChars, cInChars, cMaxItems, psControl, psState, pItems, pcItems);
 	//need to make sure SCRIPT_ITEM.SCRIPT_ANALYSIS.eScript initialized to
 	// be a complex script if we are going to get called.
-	for(int i=0; i < *pcItems; ++i){
-		SCRIPT_PROPERTIES * sp = GetScriptPropertiesOfEngine(pItems[i].a.eScript);
-		if (sp->langid != SCRIPT_UNDEFINED &&
-			!sp->fComplex){
-			pItems[i].a.eScript = GetGraphiteScriptId();
-		}
-	}
+	//for(int i=0; i < *pcItems; ++i){
+	//	SCRIPT_PROPERTIES * sp = GetScriptPropertiesOfEngine(pItems[i].a.eScript);
+	//	if (sp->langid != SCRIPT_UNDEFINED &&
+	//		!sp->fComplex){
+	//		pItems[i].a.eScript = GetGraphiteScriptId();
+	//	}
+	//}
 	WRAP_END
 }
 
