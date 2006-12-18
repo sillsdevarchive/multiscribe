@@ -1,5 +1,5 @@
 #include "../stdafx.h"
-#include "../TextSource.h"
+#include "../GlyphsToTextSourceMap.h"
 #include <utility>
 #include <limits>
 
@@ -76,6 +76,8 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 
 		*pcGlyphs = static_cast<int>(rgGlyphInfo.size());
 
+
+
 		int * rgFirstGlyphOfCluster = new int [cChars];
 		bool * rgIsClusterStart = new bool [*pcGlyphs];
 		int cCharsX, cgidX;
@@ -98,6 +100,9 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 		}
 
 		delete[] rgFirstGlyphOfCluster;
+
+		TextSource * pTextSource = CreateTextSource(pwOutGlyphs, *pcGlyphs);
+		*pTextSource = textSource;
 		return S_OK;
 	}
 	else

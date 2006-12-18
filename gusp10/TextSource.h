@@ -1,3 +1,5 @@
+#pragma once
+
 class TextSource : public gr::IColorTextSource
 {
 private:
@@ -11,8 +13,29 @@ public:
 				size_t cbText):
 		_sText(sText, cbText),
 		_foreColor(gr::kclrBlack),
-		_backColor(gr::kclrTransparent)
+		_backColor(gr::kclrTransparent),
+		_isRightToLeft(false)
 	{
+	}
+
+	TextSource ():
+		_sText(),
+		_foreColor(gr::kclrBlack),
+		_backColor(gr::kclrTransparent),
+		_isRightToLeft(false)
+	{
+	}
+
+	TextSource (const TextSource& ts):
+	_sText(ts._sText),
+		_foreColor(ts._foreColor),
+		_backColor(ts._backColor),
+		_isRightToLeft(ts._isRightToLeft)
+	{
+	}
+
+	void setText(const std::wstring & sText){
+		_sText = sText;
 	}
 
 	gr::UtfType utfEncodingForm()

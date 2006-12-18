@@ -45,7 +45,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptTextOut(
 	COLORREF OriginalColor;
 	if(IsGraphiteFont(hdc))
 	{
-		OriginalColor = SetTextColor(hdc, RGB(0,128,128));
+		OriginalColor = SetTextColor(hdc, RGB(0,128,0));
 	}
 	else
 	{

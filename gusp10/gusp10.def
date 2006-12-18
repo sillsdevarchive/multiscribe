@@ -25,3 +25,6 @@ EXPORTS
 
 ScriptApplyLogicalWidth=GraphiteEnabledScriptApplyLogicalWidth
 ScriptGetLogicalWidths=GraphiteEnabledScriptGetLogicalWidths
+
+ScriptShapeOpenType=GraphiteEnabledScriptShapeOpenType
+ScriptGetCMap=GraphiteEnabledScriptGetCMap

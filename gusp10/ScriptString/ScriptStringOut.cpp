@@ -45,12 +45,20 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringOut(
 			if(prc){
 				FillRect(hdc, prc, CreateSolidBrush(OriginalBackColor));
 			}
-			if(fDisabled){
+			if(iMinSel < iMaxSel){ //TODO
+				if(fDisabled){
+					FillRect(hdc, prc, CreateSolidBrush(COLOR_HIGHLIGHT));
+				}
 			}
 
 		}
 
 		if (uOptions & ETO_CLIPPED){
+		}
+
+		COLORREF textColor;
+		if(iMinSel < iMaxSel){ //TODO
+			textColor = (fDisabled)? OriginalTextColor: COLOR_HIGHLIGHTTEXT;
 		}
 
 		pgssa->pTextSource->setColors(0, gr::kclrBlue, gr::kclrTransparent);
