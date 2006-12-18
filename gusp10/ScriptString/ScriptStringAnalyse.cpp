@@ -69,10 +69,12 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringAnalyse(
 			if (size == 0) { // function failed
 				FreeGraphiteScriptStringAnalysis(*pssa);
 			}
-			WCHAR* buffer = new WCHAR[size+1];
+			else {
+				WCHAR* buffer = new WCHAR[size+1];
 
-			pgssa->pTextSource = new TextSource(buffer, size);
-			delete [] buffer;
+				pgssa->pTextSource = new TextSource(buffer, size);
+				delete [] buffer;
+			}
 		}
 	}
 

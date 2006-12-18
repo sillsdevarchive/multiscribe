@@ -21,12 +21,14 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringCPtoX(
 	__out_ecount(1) int                     *pX)       //Out Corresponding x offset
 {
 	GRAPHITE_SCRIPT_STRING_ANALYSIS *pgssa = GetGraphiteScriptStringAnalysis(ssa);
+
 	if(pgssa){
 	}
 	else{
 	}
 	WRAP_BEGIN(ScriptStringCPtoX, LPFNSCRIPTSTRINGCPTOX)
 	hResult = ScriptStringCPtoX(ssa, icp, fTrailing, pX);
+	*pX = 100;
 	WRAP_END
 }
 #ifdef __cplusplus

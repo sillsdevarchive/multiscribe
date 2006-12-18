@@ -14,6 +14,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringFree(
 	__deref_inout_ecount(1) SCRIPT_STRING_ANALYSIS  *pssa)  //InOut Address of pointer to analysis
 {
 	GRAPHITE_SCRIPT_STRING_ANALYSIS *pgssa = GetGraphiteScriptStringAnalysis(*pssa);
+
 	if(pgssa){
 		delete pgssa->pTextSource;
 		FreeGraphiteScriptStringAnalysis(*pssa);

@@ -27,6 +27,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringXtoCP(
 	}
 	WRAP_BEGIN(ScriptStringXtoCP, LPFNSCRIPTSTRINGXTOCP)
 	hResult = ScriptStringXtoCP(ssa, iX, piCh, piTrailing);
+	*piCh = 0;
 	WRAP_END
 }
 #ifdef __cplusplus

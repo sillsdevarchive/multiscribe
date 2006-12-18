@@ -16,6 +16,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringGetLogicalWidths(
 	int                                     *piDx)
 {
 	GRAPHITE_SCRIPT_STRING_ANALYSIS *pgssa = GetGraphiteScriptStringAnalysis(ssa);
+
 	if(pgssa){
 	}
 	else{

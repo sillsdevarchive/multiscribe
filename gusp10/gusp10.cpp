@@ -30,9 +30,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		case DLL_PROCESS_ATTACH:
 			gpGraphiteScriptStringAnalysisMap = new GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP();
 			gpGlyphsToTextSourceMap = new GLYPHS_TO_TEXTSOURCE_MAP();
-			if(InitializeScriptProperties()!=S_OK){
-				return FALSE;
-			}
 			break;
 		case DLL_PROCESS_DETACH:
 			delete(gpGraphiteScriptStringAnalysisMap);
@@ -57,6 +54,12 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 GRAPHITE_SCRIPT_STRING_ANALYSIS * const
 GetGraphiteScriptStringAnalysis(const SCRIPT_STRING_ANALYSIS ssa)
 {
+	//GRAPHITE_SCRIPT_STRING_ANALYSIS* pgssa = reinterpret_cast<GRAPHITE_SCRIPT_STRING_ANALYSIS*> (ssa);
+	//if(strncmp(pgssa->graphiteId, "graphite", 8) == 0){
+	//	return pgssa;
+	//}
+	//return NULL;
+
 	assert(gpGraphiteScriptStringAnalysisMap);
 	if(!gpGraphiteScriptStringAnalysisMap){
 		return NULL;
@@ -70,6 +73,13 @@ GetGraphiteScriptStringAnalysis(const SCRIPT_STRING_ANALYSIS ssa)
 }
 
 void FreeGraphiteScriptStringAnalysis(const SCRIPT_STRING_ANALYSIS ssa){
+
+	//GRAPHITE_SCRIPT_STRING_ANALYSIS* pgssa = GetGraphiteScriptStringAnalysis(ssa);
+	//if(pgssa)
+	//{
+	//	delete pgssa;
+	//}
+
 	assert(gpGraphiteScriptStringAnalysisMap);
 	if(!gpGraphiteScriptStringAnalysisMap){
 		return;
@@ -85,12 +95,15 @@ void FreeGraphiteScriptStringAnalysis(const SCRIPT_STRING_ANALYSIS ssa){
 
 GRAPHITE_SCRIPT_STRING_ANALYSIS * const
 CreateGraphiteScriptStringAnalysis(const SCRIPT_STRING_ANALYSIS ssa){
+
 	assert(gpGraphiteScriptStringAnalysisMap);
 	if(!gpGraphiteScriptStringAnalysisMap){
 		return NULL;
 	}
 	GRAPHITE_SCRIPT_STRING_ANALYSIS* pgssa = new GRAPHITE_SCRIPT_STRING_ANALYSIS();
 	gpGraphiteScriptStringAnalysisMap->insert(std::make_pair(ssa, pgssa));
+	//strncpy(pgssa->graphiteId, "graphite", 8);
+	//pgssa->ssa = ssa;
 	return pgssa;
 }
 

@@ -122,10 +122,12 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GUSP10_EXPORTS"
+				AdditionalIncludeDirectories="&quot;C:\Documents and Settings\Eric\My Documents\code\Graphite\include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE "
 				RuntimeLibrary="0"
-				UsePrecompiledHeader="2"
-				WarningLevel="3"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				WarnAsError="true"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 			/>
@@ -140,7 +142,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="graphite.lib"
+				OutputFile="$(OutDir)\usp10.dll"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;C:\Documents and Settings\Eric\My Documents\code\Graphite\release&quot;"
 				ModuleDefinitionFile="gusp10.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

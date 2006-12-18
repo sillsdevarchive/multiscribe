@@ -20,6 +20,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptBreak(
 	__in_ecount(1) const SCRIPT_ANALYSIS        *psa,       // In   Result of earlier ScriptItemize call
 	__out_ecount_full(cChars) SCRIPT_LOGATTR    *psla)     // Out  Logical character attributes
 {
+
 	WRAP_BEGIN(ScriptBreak, LPFNSCRIPTBREAK)
 	hResult = ScriptBreak(pwcChars,cChars,psa,psla);
 	WRAP_END

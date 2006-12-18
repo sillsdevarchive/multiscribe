@@ -2,6 +2,8 @@
 static SCRIPT_PROPERTIES **gppScriptProperties;
 static int giNumScripts;
 
+HRESULT InitializeScriptProperties();
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// ScriptGetProperties
 //#pragma comment(linker, "/export:ScriptGetProperties=_usp10.ScriptGetProperties")
@@ -21,6 +23,13 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptGetProperties(
 		*piNumScripts = giNumScripts;
 	}
 	if(pppSp){
+		if(!gppScriptProperties){ // hasn't been initialized yet, initialized first time called
+			HRESULT hr = InitializeScriptProperties();
+			if(FAILED(hr)){
+				return hr;
+			}
+		}
+
 		*pppSp = const_cast<const SCRIPT_PROPERTIES**>(gppScriptProperties);
 	}
 	return S_OK;

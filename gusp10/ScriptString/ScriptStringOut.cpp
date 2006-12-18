@@ -50,7 +50,6 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringOut(
 					FillRect(hdc, prc, CreateSolidBrush(COLOR_HIGHLIGHT));
 				}
 			}
-
 		}
 
 		if (uOptions & ETO_CLIPPED){

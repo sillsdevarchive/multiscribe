@@ -4,8 +4,18 @@
 #include <map>
 #include "TextSource.h"
 
+// outChars is at offset 0x108 and is accessed directly by lpk.dll
+// size is at offset 0x118
+// logAttr is at offset 0x26c
+
+// hdc is at offset 0x0
+// cString is at offset 0x2c
+// pString is at offset 0x28
+
 typedef struct {
 	HDC						hdc;			// Device context
+	//char					graphiteId[8];  //space for 'graphite'
+	//SCRIPT_STRING_ANALYSIS  ssa;
 	TextSource*				pTextSource;
 	int						iReqWidth;
 	int						cOutChars;
