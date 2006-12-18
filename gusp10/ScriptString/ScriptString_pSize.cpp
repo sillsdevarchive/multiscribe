@@ -20,15 +20,7 @@ const SIZE* WINAPI GraphiteEnabledScriptString_pSize(
 		HDC hdc = pgssa->hdc;
 		assert(hdc);
 		if(hdc){
-			// Create the Graphite font object.
-			gr::WinFont font(hdc);
-
-			// Create the segment.
-			gr::LayoutEnvironment layout;	// use all the defaults...
-			layout.setDumbFallback(true);	// except that we want it to try its best, no matter what
-			gr::RangeSegment seg(&font, pgssa->pTextSource, &layout);
-
-			gr::Rect boundingRect = seg.boundingRect();
+			gr::Rect boundingRect = pgssa->pSegment->boundingRect();
 			float boundingWidth = abs(boundingRect.right - boundingRect.left);
 			pgssa->size.cx = static_cast<int>(ceil(boundingWidth));
 			float boundingHeight = abs(boundingRect.bottom - boundingRect.top);

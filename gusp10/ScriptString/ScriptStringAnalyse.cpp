@@ -61,20 +61,41 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringAnalyse(
 			return E_FAIL;
 		}
 		pgssa->hdc = hdc;
-		if(iCharset == -1) {
-			pgssa->pTextSource = new TextSource(reinterpret_cast<const WCHAR*>(pString), cString);
+
+		// Create the Graphite font object.
+		pgssa->pFont = new gr::WinFont(hdc);
+
+		// Create the segment.
+		pgssa->pLayout = new gr::LayoutEnvironment();	// use all the defaults...
+		pgssa->pLayout->setDumbFallback(true);	// except that we want it to try its best, no matter what
+
+		const WCHAR* buffer = NULL;
+		int size = 0;
+		if(iCharset == -1) { //already unicode
+			buffer = reinterpret_cast<const WCHAR*>(pString);
+			size = cString;
+		}
+		else { // needs to be converted to unicode
+			size = MultiByteToWideChar(iCharset, 0, reinterpret_cast<LPCSTR>(pString), cString, NULL, 0);
+			if (size > 0) { // function failed
+				buffer = new WCHAR[size+1];
+				size = MultiByteToWideChar(iCharset, 0, reinterpret_cast<LPCSTR>(pString), cString, NULL, 0);
+				if(size == 0){
+					delete[] buffer;
+					buffer = NULL;
+				}
+			}
+		}
+
+		if(buffer){
+			pgssa->textSource = TextSource(buffer, size);
+			pgssa->pSegment = new gr::RangeSegment(pgssa->pFont, &pgssa->textSource, pgssa->pLayout);
+			if(iCharset != -1){
+				delete [] buffer; // had to allocate space for the conversion
+			}
 		}
 		else {
-			int size = MultiByteToWideChar(iCharset, 0, reinterpret_cast<LPCSTR>(pString), cString, NULL, 0);
-			if (size == 0) { // function failed
-				FreeGraphiteScriptStringAnalysis(*pssa);
-			}
-			else {
-				WCHAR* buffer = new WCHAR[size+1];
-
-				pgssa->pTextSource = new TextSource(buffer, size);
-				delete [] buffer;
-			}
+			FreeGraphiteScriptStringAnalysis(*pssa);
 		}
 	}
 

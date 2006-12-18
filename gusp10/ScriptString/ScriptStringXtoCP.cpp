@@ -22,13 +22,20 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringXtoCP(
 {
 	GRAPHITE_SCRIPT_STRING_ANALYSIS *pgssa = GetGraphiteScriptStringAnalysis(ssa);
 	if(pgssa){
+		gr::WinSegmentPainter painter(pgssa->pSegment, pgssa->hdc);
+		POINT point;
+		point.x = iX;
+		point.y = 0;
+		bool fTrailing;
+		painter.pointToChar(point, piCh, &fTrailing);
+		*piTrailing = fTrailing;
+		return S_OK;
 	}
 	else{
+		WRAP_BEGIN(ScriptStringXtoCP, LPFNSCRIPTSTRINGXTOCP)
+		hResult = ScriptStringXtoCP(ssa, iX, piCh, piTrailing);
+		WRAP_END
 	}
-	WRAP_BEGIN(ScriptStringXtoCP, LPFNSCRIPTSTRINGXTOCP)
-	hResult = ScriptStringXtoCP(ssa, iX, piCh, piTrailing);
-	*piCh = 0;
-	WRAP_END
 }
 #ifdef __cplusplus
 }

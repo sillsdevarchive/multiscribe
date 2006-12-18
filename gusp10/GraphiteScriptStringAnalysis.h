@@ -14,18 +14,14 @@
 
 typedef struct {
 	HDC						hdc;			// Device context
-	//char					graphiteId[8];  //space for 'graphite'
-	//SCRIPT_STRING_ANALYSIS  ssa;
-	TextSource*				pTextSource;
+	TextSource				textSource;
 	int						iReqWidth;
 	int						cOutChars;
 	SCRIPT_LOGATTR*			pLogAttr;
 	SIZE					size;
-/*	gr::WinFont				font;
-	gr::LayoutEnvironment	layout;
-	gr::Segment				segment;
-*/
-
+	gr::WinFont	*			pFont; // ideally this would not be allocated in place rather than on the heap but WinFont's copy constructor is buggy
+	gr::LayoutEnvironment *	pLayout; // again ideally this would be allocated in place
+	gr::Segment	*			pSegment; // same as above
 } GRAPHITE_SCRIPT_STRING_ANALYSIS;
 
 typedef struct {

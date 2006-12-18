@@ -45,11 +45,6 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringOut(
 			if(prc){
 				FillRect(hdc, prc, CreateSolidBrush(OriginalBackColor));
 			}
-			if(iMinSel < iMaxSel){ //TODO
-				if(fDisabled){
-					FillRect(hdc, prc, CreateSolidBrush(COLOR_HIGHLIGHT));
-				}
-			}
 		}
 
 		if (uOptions & ETO_CLIPPED){
@@ -60,20 +55,19 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringOut(
 			textColor = (fDisabled)? OriginalTextColor: COLOR_HIGHLIGHTTEXT;
 		}
 
-		pgssa->pTextSource->setColors(0, gr::kclrBlue, gr::kclrTransparent);
-
-		// Create the Graphite font object.
-		gr::WinFont font(hdc);
-
-		// Create the segment.
-		gr::LayoutEnvironment layout;	// use all the defaults...
-		layout.setDumbFallback(true);	// except that we want it to try its best, no matter what
-		gr::RangeSegment seg(&font, pgssa->pTextSource, &layout);
+		pgssa->textSource.setColors(0, gr::kclrBlue, gr::kclrTransparent);
 
 		// Draw the segment.
-		gr::WinSegmentPainter painter(&seg, hdc);
+		gr::WinSegmentPainter painter(pgssa->pSegment, hdc);
 		painter.setOrigin(static_cast<float>(iX), static_cast<float>(iY));
 		painter.paint();
+		if(iMinSel < iMaxSel){
+			painter.drawSelectionRange(iMinSel,
+									   iMaxSel,
+									   static_cast<float>(iY),
+									   pgssa->pFont->height()+iY,
+									   true);
+		}
 
 		SetTextColor(hdc, OriginalTextColor);
 		SetBkColor(hdc, OriginalBackColor);

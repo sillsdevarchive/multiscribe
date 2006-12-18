@@ -16,7 +16,9 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringFree(
 	GRAPHITE_SCRIPT_STRING_ANALYSIS *pgssa = GetGraphiteScriptStringAnalysis(*pssa);
 
 	if(pgssa){
-		delete pgssa->pTextSource;
+		delete pgssa->pFont;
+		delete pgssa->pLayout;
+		delete pgssa->pSegment;
 		FreeGraphiteScriptStringAnalysis(*pssa);
 	}
 	else{
