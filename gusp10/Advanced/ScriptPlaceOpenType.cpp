@@ -82,18 +82,9 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 		layout.setDumbFallback(true);	// except that we want it to try its best, no matter what
 		gr::RangeSegment seg(&font, &textSource, &layout);
 
-		std::pair<gr::GlyphIterator, gr::GlyphIterator> prGlyphIterators =
-		seg.glyphs();
+		std::pair<gr::GlyphIterator, gr::GlyphIterator> prGlyphIterators = seg.glyphs();
 
-		std::vector<gr::GlyphInfo> rgGlyphInfo;
-
-		for(gr::GlyphIterator it = prGlyphIterators.first;
-							  it != prGlyphIterators.second;
-							  ++it){
-			rgGlyphInfo.push_back(*it);
-		}
-
-		float xCurrent = 0.0;
+		float xClusterEnd = 0.0;
 		int i = 0;
 		for(gr::GlyphIterator it = prGlyphIterators.first;
 								  it != prGlyphIterators.second;
@@ -102,21 +93,29 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 				break;
 			}
 
-			float advanceWidth = it->advanceWidth();
-			advanceWidth;
-			float origin = it->origin();
-			origin;
-			float attachedClusterAdvance = it->attachedClusterAdvance();
-			attachedClusterAdvance;
+			gr::GlyphIterator itNext = it + 1;
 
 			if(it->isAttached()){
-				piAdvance[i] = 0;//static_cast<int>(ceil(it->advanceWidth()));
-
-				pGoffset[i].du = static_cast<int>(floor(it->origin() - xCurrent));
-				if(it == it->attachedClusterBase()){ // first glyph of attached cluster
-					piAdvance[i] = static_cast<LONG>(ceil(it->attachedClusterAdvance()));   // x offset for combining glyph
-					xCurrent = it->origin() + it->attachedClusterAdvance();
+				//The advance width' of a glyph is the movement in the
+				//direction of writing from the starting point for rendering
+				//that glyph to the starting point for rendering the next glyph.
+				//
+				//The origin of each subsequent glyph is offset from that of the
+				//previous glyph by the advance values of the previous glyph.
+				//
+				if(it == it->attachedClusterBase()){
+					//Base glyphs generally have a non-zero advance width
+					//and generally have a glyph offset of (0, 0).
+					piAdvance[i] = static_cast<int>(ceil(it->attachedClusterAdvance()));   // x offset for combining glyph
+					xClusterEnd = it->origin() + it->attachedClusterAdvance();
 					pGoffset[i].du = 0;
+				}
+				else {
+					//Combining glyphs generally have a zero advance width and
+					//generally have an offset that places them correctly in
+					//relation to the nearest preceding base glyph.
+					piAdvance[i] = 0;
+					pGoffset[i].du = static_cast<int>(floor(it->origin() - xClusterEnd));
 				}
 			}
 			else {
