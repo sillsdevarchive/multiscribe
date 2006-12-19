@@ -1,11 +1,14 @@
+#pragma comment(linker, "/export:ScriptShape=_usp10.ScriptShape")
+
 #include "../stdafx.h"
 #include "../GlyphsToTextSourceMap.h"
 #include <utility>
 #include <limits>
+LPVOID GetOriginalScriptShape();
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /////   ScriptShape
-//#pragma comment(linker, "/export:ScriptShape=_usp10.ScriptShape")
 
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSHAPE) (
 	HDC                                                     hdc,            // In    Optional (see under caching)
@@ -19,9 +22,9 @@ typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSHAPE) (
 	__out_ecount_part(cMaxGlyphs, *pcGlyphs) SCRIPT_VISATTR *psva,          // Out   Visual glyph attributes
 	__out_ecount(1) int                                     *pcGlyphs);     // Out   Count of glyphs generated
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 	HDC                                                     hdc,            // In    Optional (see under caching)
 	__deref_inout_ecount(1) SCRIPT_CACHE                    *psc,           // InOut Cache handle
@@ -37,14 +40,18 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 	if(!hdc){ //TODO: keep a cache
 		return E_PENDING;
 	}
+	LPFNSCRIPTSHAPE ScriptShape = (LPFNSCRIPTSHAPE) GetOriginalScriptShape();
+
 	if(IsGraphiteFont(hdc))
 	{
 		if(!psc)
 		{
-			WRAP_BEGIN(ScriptShape, LPFNSCRIPTSHAPE)
-			// only to setup the cache correctly:
-			hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
-			WRAP_END_NO_RETURN
+			HRESULT hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
+			hResult;
+			//WRAP_BEGIN(ScriptShape, LPFNSCRIPTSHAPE)
+			//// only to setup the cache correctly:
+			//hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
+			//WRAP_END_NO_RETURN
 		}
 
 		 TextSource textSource(pwcChars, cChars);
@@ -107,11 +114,13 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 	}
 	else
 	{
-		WRAP_BEGIN(ScriptShape, LPFNSCRIPTSHAPE)
-		hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
-		WRAP_END
+		HRESULT hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
+		return hResult;
+		//WRAP_BEGIN(ScriptShape, LPFNSCRIPTSHAPE)
+		//hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
+	 //   WRAP_END
 	}
 }
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif

@@ -1,8 +1,12 @@
+#pragma comment(linker, "/export:ScriptPlace=_usp10.ScriptPlace")
+
+
 #include <math.h>
 #include "../stdafx.h"
 #include "../GlyphsToTextSourceMap.h"
+#include "../hook.h"
+LPVOID GetOriginalScriptPlace();
 
-//#pragma comment(linker, "/export:ScriptPlace=_usp10.ScriptPlace")
 
 /////   ScriptPlace
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTPLACE)(
@@ -16,9 +20,9 @@ typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTPLACE)(
 	__out_ecount_full_opt(cGlyphs) GOFFSET      *pGoffset,  // Out   x,y offset for combining glyph
 	__out_ecount(1) ABC                         *pABC);     // Out   Composite ABC for the whole run (Optional)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 	HDC                                         hdc,        // In    Optional (see under caching)
@@ -34,6 +38,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 	if(!hdc){ //TODO: keep a cache
 		return E_PENDING;
 	}
+	LPFNSCRIPTPLACE ScriptPlace = (LPFNSCRIPTPLACE) GetOriginalScriptPlace();
 	if(IsGraphiteFont(hdc))
 	{
 		//if(!psc)
@@ -47,9 +52,11 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 		TextSource * pTextSource = GetTextSource(pwGlyphs, cGlyphs);
 		if(!pTextSource){
 			//fallback
-			WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
-			hResult = ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
-			WRAP_END
+			return ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
+
+			//WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
+			//hResult = ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
+			//WRAP_END
 		}
 
 		// Create the Graphite font object.
@@ -105,9 +112,11 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 		if(i != cGlyphs){
 			assert(false);
 			//fallback
-			WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
-			hResult = ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
-			WRAP_END
+			return ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
+
+			//WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
+			//hResult = ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
+			//WRAP_END
 		}
 
 		if(pABC){ //TODO
@@ -121,11 +130,9 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 		return S_OK;
 	}
 	else {
-		WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
-		hResult = ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
-		WRAP_END
+		return ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
 	}
 }
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif

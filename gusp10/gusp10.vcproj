@@ -17,7 +17,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="C:\Program Files\Microsoft Office\OFFICE12"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -193,6 +193,10 @@
 			</File>
 			<File
 				RelativePath=".\gusp10.def"
+				>
+			</File>
+			<File
+				RelativePath=".\hook.cpp"
 				>
 			</File>
 			<File
@@ -403,6 +407,10 @@
 			</File>
 			<File
 				RelativePath=".\GraphiteScriptStringAnalysis.h"
+				>
+			</File>
+			<File
+				RelativePath=".\hook.h"
 				>
 			</File>
 			<File

@@ -1,26 +1,27 @@
-#include "../stdafx.h"
-#include "../GraphiteScriptStringAnalysis.h"
+//#include "../stdafx.h"
+//#include "../GraphiteScriptStringAnalysis.h"
+#pragma comment(linker, "/export:ScriptStringValidate=_usp10.ScriptStringValidate")
 
 /////   ScriptStringValidate
-typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSTRINGVALIDATE)(
-	__in_ecount(1) SCRIPT_STRING_ANALYSIS   ssa);
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-__checkReturn HRESULT WINAPI GraphiteEnabledScriptStringValidate(
-	__in_ecount(1) SCRIPT_STRING_ANALYSIS   ssa)
-{
-	GRAPHITE_SCRIPT_STRING_ANALYSIS *pgssa = GetGraphiteScriptStringAnalysis(ssa);
-	if(pgssa){
-	}
-	else{
-	}
-	WRAP_BEGIN(ScriptStringValidate, LPFNSCRIPTSTRINGVALIDATE)
-	hResult = ScriptStringValidate(ssa);
-	WRAP_END
-}
-#ifdef __cplusplus
-}
-#endif
+//typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSTRINGVALIDATE)(
+//    __in_ecount(1) SCRIPT_STRING_ANALYSIS   ssa);
+//
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
+//
+//__checkReturn HRESULT WINAPI GraphiteEnabledScriptStringValidate(
+//    __in_ecount(1) SCRIPT_STRING_ANALYSIS   ssa)
+//{
+//	GRAPHITE_SCRIPT_STRING_ANALYSIS *pgssa = GetGraphiteScriptStringAnalysis(ssa);
+//	if(pgssa){
+//	}
+//	else{
+//	}
+//	WRAP_BEGIN(ScriptStringValidate, LPFNSCRIPTSTRINGVALIDATE)
+//	hResult = ScriptStringValidate(ssa);
+//	WRAP_END
+//}
+//#ifdef __cplusplus
+//}
+//#endif

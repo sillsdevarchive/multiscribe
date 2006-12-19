@@ -1,9 +1,9 @@
 #include "../stdafx.h"
-#include "../GraphiteScriptStringAnalysis.h"
+//#include "../GraphiteScriptStringAnalysis.h"
 //#pragma comment(linker, "/export:ScriptStringOut=_usp10.ScriptStringOut")
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/////   ScriptStringOut
+/////////////////////////////////////////////////////////////////////////////////////////////////
+///   ScriptStringOut
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSTRINGOUT)(
 	__in_ecount(1) SCRIPT_STRING_ANALYSIS   ssa,            //In  Analysis with glyphs
 	int                                     iX,             //In
@@ -28,62 +28,62 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringOut(
 	int                                     iMaxSel,        //In
 	BOOL                                    fDisabled)      //In  If disabled, only the background is highlighted.
 {
-	GRAPHITE_SCRIPT_STRING_ANALYSIS *pgssa = GetGraphiteScriptStringAnalysis(ssa);
+	//GRAPHITE_SCRIPT_STRING_ANALYSIS *pgssa = GetGraphiteScriptStringAnalysis(ssa);
 	HDC hdc = NULL;
-	if(pgssa){
-		hdc = pgssa->hdc;
-		assert(hdc);
-		if(!hdc){
-			return E_FAIL;
-		}
-		COLORREF OriginalTextColor = GetTextColor(hdc);
-		COLORREF OriginalBackColor = GetBkColor(hdc);
-		int OriginalBackMode = GetBkMode(hdc);
+	//if(pgssa){
+	//	hdc = pgssa->hdc;
+	//	assert(hdc);
+	//	if(!hdc){
+	//		return E_FAIL;
+	//	}
+	//	COLORREF OriginalTextColor = GetTextColor(hdc);
+	//	COLORREF OriginalBackColor = GetBkColor(hdc);
+	//	int OriginalBackMode = GetBkMode(hdc);
 
-		if (uOptions & ETO_OPAQUE) {
-			assert(prc != NULL);
-			if(prc){
-				FillRect(hdc, prc, CreateSolidBrush(OriginalBackColor));
-			}
-		}
+	//	if (uOptions & ETO_OPAQUE) {
+	//		assert(prc != NULL);
+	//		if(prc){
+	//			FillRect(hdc, prc, CreateSolidBrush(OriginalBackColor));
+	//		}
+	//	}
 
-		if (uOptions & ETO_CLIPPED){
-		}
+	//	if (uOptions & ETO_CLIPPED){
+	//	}
 
-		COLORREF textColor;
-		if(iMinSel < iMaxSel){ //TODO
-			textColor = (fDisabled)? OriginalTextColor: COLOR_HIGHLIGHTTEXT;
-		}
+	//	COLORREF textColor;
+	//	if(iMinSel < iMaxSel){ //TODO
+	//		textColor = (fDisabled)? OriginalTextColor: COLOR_HIGHLIGHTTEXT;
+	//	}
 
-		pgssa->textSource.setColors(0, gr::kclrBlue, gr::kclrTransparent);
+	//	pgssa->textSource.setColors(0, gr::kclrBlue, gr::kclrTransparent);
 
-		// Draw the segment.
-		gr::WinSegmentPainter painter(pgssa->pSegment, hdc);
-		painter.setOrigin(static_cast<float>(iX), static_cast<float>(iY));
-		painter.paint();
-		if(iMinSel < iMaxSel){
-			painter.drawSelectionRange(iMinSel,
-									   iMaxSel,
-									   static_cast<float>(iY),
-									   pgssa->pFont->height()+iY,
-									   true);
-		}
+	//	// Draw the segment.
+	//	gr::WinSegmentPainter painter(pgssa->pSegment, hdc);
+	//	painter.setOrigin(static_cast<float>(iX), static_cast<float>(iY));
+	//	painter.paint();
+	//	if(iMinSel < iMaxSel){
+	//		painter.drawSelectionRange(iMinSel,
+	//								   iMaxSel,
+	//								   static_cast<float>(iY),
+	//								   pgssa->pFont->height()+iY,
+	//								   true);
+	//	}
 
-		SetTextColor(hdc, OriginalTextColor);
-		SetBkColor(hdc, OriginalBackColor);
-		SetBkMode(hdc, OriginalBackMode);
-		return S_OK;
-	}
-	else{
+	//	SetTextColor(hdc, OriginalTextColor);
+	//	SetBkColor(hdc, OriginalBackColor);
+	//	SetBkMode(hdc, OriginalBackMode);
+	//	return S_OK;
+	//}
+	//else{
 		WRAP_BEGIN(ScriptStringOut, LPFNSCRIPTSTRINGOUT)
-		CLEAR_SCRIPT_STRING_ANALYSIS* pcssa = (CLEAR_SCRIPT_STRING_ANALYSIS*) ssa;
-		hdc = pcssa->hdc;
-		COLORREF OriginalTextColor = SetTextColor(hdc, RGB(255,0,0));
+		HDC* phdc = (HDC*) ssa;
+		hdc = *phdc;
+		COLORREF OriginalTextColor = SetTextColor(hdc, RGB(IsGraphiteFont(hdc)?128:255,0,0));
 
 		hResult = ScriptStringOut(ssa, iX,iY, uOptions, prc, iMinSel, iMaxSel, fDisabled);
 		SetTextColor(hdc, OriginalTextColor);
 		WRAP_END
-	}
+	//}
 
 }
 #ifdef __cplusplus
