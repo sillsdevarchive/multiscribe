@@ -164,58 +164,78 @@ static unsigned char dis2[2359] =//dis engine ww.delikon.de
 
 LPVOID mymalloc(UINT size)
 {
-	LPVOID p=NULL;
-	p= VirtualAlloc(NULL,size,MEM_COMMIT,PAGE_READWRITE);
-	return p;
+	return VirtualAlloc(NULL,size,MEM_COMMIT,PAGE_READWRITE);
 }
 
-Surrogate::Surrogate(LPCSTR szLibFileName, LPCSTR szOriginalFuncName, LPVOID ReplaceFuncAddr)
+Interceptor::Interceptor(LPCSTR szLibFileName, LPCSTR szOriginalFuncName, LPVOID InterceptingFuncAddr)
 {
 	m_InjectedDllHandle=LoadLibraryA(szLibFileName);
 	assert(m_InjectedDllHandle);
 	if(m_InjectedDllHandle)
 	{
-		Initialize(GetProcAddress(m_InjectedDllHandle, szOriginalFuncName), ReplaceFuncAddr);
+		Initialize(m_InjectedDllHandle, GetProcAddress(m_InjectedDllHandle, szOriginalFuncName), InterceptingFuncAddr);
 #if _DEBUG
 		strncpy(m_OriginalFuncName,szOriginalFuncName,MAX);
 #endif
+		InstallInterceptor();
 	}
 }
 
-Surrogate::Surrogate(LPVOID OriginalFuncAddr,LPVOID ReplaceFuncAddr)
+Interceptor::Interceptor(HINSTANCE hLibrary, LPCSTR szOriginalFuncName, LPVOID InterceptingFuncAddr)
 {
-	Initialize(OriginalFuncAddr, ReplaceFuncAddr);
+	assert(hLibrary);
+	if(hLibrary)
+	{
+		Initialize(NULL, GetProcAddress(hLibrary, szOriginalFuncName), InterceptingFuncAddr);
+#if _DEBUG
+		strncpy(m_OriginalFuncName,szOriginalFuncName,MAX);
+#endif
+		InstallInterceptor();
+	}
 }
 
-void Surrogate::Initialize(LPVOID OriginalFuncAddr,LPVOID ReplaceFuncAddr)
+
+Interceptor::Interceptor(LPVOID OriginalFuncAddr,LPVOID InterceptingFuncAddr)
+{
+	Initialize(NULL, OriginalFuncAddr, InterceptingFuncAddr);
+
+	InstallInterceptor();
+}
+
+void Interceptor::Initialize(HINSTANCE hLibrary, LPVOID OriginalFuncAddr,LPVOID InterceptingFuncAddr)
 {
 	assert(OriginalFuncAddr);
-	assert(ReplaceFuncAddr);
+	assert(InterceptingFuncAddr);
+	m_InjectedDllHandle = hLibrary;
 
 #if _DEBUG
 	memset(m_OriginalFuncName,0,MAX);
 #endif
 
 	m_OriginalFuncAddr=OriginalFuncAddr;
-	m_ReplaceFuncAddr=ReplaceFuncAddr;
+	m_InterceptingFuncAddr=InterceptingFuncAddr;
 
 	m_isInstalled = false;
 }
 
-Surrogate::~Surrogate()
+Interceptor::~Interceptor()
 {
+	if(m_isInstalled){
+		RemoveInterceptor();
+	}
+
 	if(m_InjectedDllHandle){
-		//don't call this from dllmain it isn't safe
-//		FreeLibrary(m_InjectedDllHandle);
+		//don't call this from dllmain it isn't safe (use constructor that provides handle so it won't get freed automatically)
+		FreeLibrary(m_InjectedDllHandle);
 	}
 }
 
-void Surrogate::InstallSurrogate(){
+void Interceptor::InstallInterceptor(){
 	assert(!m_isInstalled);
 	if(m_isInstalled){
 		return;
 	}
-	if(!m_OriginalFuncAddr || !m_ReplaceFuncAddr) {
+	if(!m_OriginalFuncAddr || !m_InterceptingFuncAddr) {
 		return;
 	}
 
@@ -249,16 +269,16 @@ void Surrogate::InstallSurrogate(){
 	VirtualProtect(m_OriginalFuncAddr, m_countBytes, PAGE_EXECUTE_READWRITE, &dwOriginalProtection); // unlock
 	memcpy(m_OriginalFuncByteCodePrefix, m_OriginalFuncAddr, m_countBytes);//save bytes
 
-	//overwrite original function with unconditional relative jump to our surrogate function
+	//overwrite original function with unconditional relative jump to our Interceptor function
 	// aka detour
 
 	//compute relative jump offset
-	DWORD OffsetFromOriginalToSurrogate = (DWORD)m_ReplaceFuncAddr - (DWORD)m_OriginalFuncAddr - JMP_SIZE;
+	DWORD OffsetFromOriginalToInterceptor = (DWORD)m_InterceptingFuncAddr - (DWORD)m_OriginalFuncAddr - JMP_SIZE;
 	jumpByteCode[0] = 0xe9; //relative 32-bit jmp instruction; address follows
-	jumpByteCode[1] = (BYTE)(OffsetFromOriginalToSurrogate & 0xff);
-	jumpByteCode[2] = (BYTE)((OffsetFromOriginalToSurrogate >> 8) & 0xff);
-	jumpByteCode[3] = (BYTE)((OffsetFromOriginalToSurrogate >> 16) & 0xff);
-	jumpByteCode[4] = (BYTE)((OffsetFromOriginalToSurrogate >> 24) & 0xff);
+	jumpByteCode[1] = (BYTE)(OffsetFromOriginalToInterceptor & 0xff);
+	jumpByteCode[2] = (BYTE)((OffsetFromOriginalToInterceptor >> 8) & 0xff);
+	jumpByteCode[3] = (BYTE)((OffsetFromOriginalToInterceptor >> 16) & 0xff);
+	jumpByteCode[4] = (BYTE)((OffsetFromOriginalToInterceptor >> 24) & 0xff);
 	memcpy(m_OriginalFuncAddr,jumpByteCode,JMP_SIZE);
 
 	//pad with noop 0x90
@@ -284,15 +304,15 @@ void Surrogate::InstallSurrogate(){
 }
 
 
-LPVOID Surrogate::GetOrginal(){
+LPVOID Interceptor::GetOriginal(){
 	return (m_isInstalled) ?  m_OriginalFuncByteCodePrefix : m_OriginalFuncAddr;
 }
 
-LPVOID Surrogate::GetSurrogate(){
-	return m_ReplaceFuncAddr;
+LPVOID Interceptor::GetInterceptor(){
+	return m_InterceptingFuncAddr;
 }
 
-void Surrogate::RemoveSurrogate(){
+void Interceptor::RemoveInterceptor(){
 	assert(m_isInstalled);
 	if(!m_isInstalled){
 		return;
@@ -306,16 +326,5 @@ void Surrogate::RemoveSurrogate(){
 	m_OriginalFuncByteCodePrefix = NULL;
 	m_isInstalled = false;
 }
-
-/*
-void main(){
-	//hook *h=new hook("WinExec","send","WS32_2.dll");
-	hook *h=new hook("Sleep",(UCHAR*)&func);
-	h->setHook();
-
-	_asm{int 3}
-	Sleep(2);
-}
-*/
 
 #pragma warning(pop)

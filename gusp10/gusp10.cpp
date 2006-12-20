@@ -29,23 +29,59 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 	__out_ecount_part(cMaxGlyphs, *pcGlyphs) SCRIPT_VISATTR *psva,          // Out   Visual glyph attributes
 	__out_ecount(1) int                                     *pcGlyphs);     // Out   Count of glyphs generated
 
+__checkReturn HRESULT WINAPI GraphiteEnabledScriptIsComplex(
+	__in_ecount(cInChars) const WCHAR   *pwcInChars,    //In  String to be tested
+	int                                 cInChars,       //In  Length in characters
+	DWORD                               dwFlags);       //In  Flags (see above)
 
-HRESULT InitializeScriptProperties();
-void FreeScriptProperties();
+//void FreeScriptProperties();
 
 //static GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP * gpGraphiteScriptStringAnalysisMap;
 static GLYPHS_TO_TEXTSOURCE_MAP * gpGlyphsToTextSourceMap;
-static Surrogate * gpScriptShapeSurrogate;
-static Surrogate * gpScriptPlaceSurrogate;
+static Interceptor * gpScriptShapeInterceptor;
+static Interceptor * gpScriptPlaceInterceptor;
+static Interceptor * gpScriptIsComplexInterceptor;
+
+static HINSTANCE ghUSP10DLL;
 
 LPVOID GetOriginalScriptShape()
 {
-	return gpScriptShapeSurrogate->GetOrginal();
+	return gpScriptShapeInterceptor->GetOriginal();
 }
 
 LPVOID GetOriginalScriptPlace()
 {
-	return gpScriptPlaceSurrogate->GetOrginal();
+	return gpScriptPlaceInterceptor->GetOriginal();
+}
+
+LPVOID GetOriginalScriptIsComplex()
+{
+	return gpScriptIsComplexInterceptor->GetOriginal();
+}
+
+
+typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETPROPERTIES) (
+	__deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,        // Out  Receives pointer to table of pointers to properties indexed by script
+	__out_ecount(1) int                             *piNumScripts); // Out  Receives number of scripts (valid values are 0 through NumScripts-1)
+
+HRESULT MakeAllScriptPropertiesComplex(){
+	WRAP_BEGIN(ScriptGetProperties, LPFNSCRIPTGETPROPERTIES)
+
+	const SCRIPT_PROPERTIES ** ppSp;
+	SCRIPT_PROPERTIES * pSp;
+	DWORD dwOriginalProtection;
+
+	int iNumScripts;
+	hResult = ScriptGetProperties(&ppSp, &iNumScripts);
+	if (hResult == S_OK){
+		for(int i = 0; i < iNumScripts; ++i){
+			pSp = const_cast<SCRIPT_PROPERTIES *>(ppSp[i]);
+			VirtualProtect(pSp, sizeof(SCRIPT_PROPERTIES), PAGE_EXECUTE_READWRITE, &dwOriginalProtection); // unlock
+			pSp->fComplex = true;
+			VirtualProtect(pSp, sizeof(SCRIPT_PROPERTIES), dwOriginalProtection, &dwOriginalProtection); // lock
+		}
+	}
+	WRAP_END
 }
 
 #ifdef __cplusplus
@@ -66,21 +102,21 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
 	switch(ul_reason_for_call){
 		case DLL_PROCESS_ATTACH:
+			ghUSP10DLL = LoadLibraryA("_usp10.dll");
+			MakeAllScriptPropertiesComplex();
 //			gpGraphiteScriptStringAnalysisMap = new GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP();
 			gpGlyphsToTextSourceMap = new GLYPHS_TO_TEXTSOURCE_MAP();
-			gpScriptPlaceSurrogate = new Surrogate("_usp10.dll", "ScriptPlace", &GraphiteEnabledScriptPlace);
-			gpScriptPlaceSurrogate->InstallSurrogate();
-			gpScriptShapeSurrogate = new Surrogate("_usp10.dll", "ScriptShape", &GraphiteEnabledScriptShape);
-			gpScriptShapeSurrogate->InstallSurrogate();
+			gpScriptPlaceInterceptor = new Interceptor(ghUSP10DLL, "ScriptPlace", &GraphiteEnabledScriptPlace);
+			gpScriptShapeInterceptor = new Interceptor(ghUSP10DLL, "ScriptShape", &GraphiteEnabledScriptShape);
+			gpScriptIsComplexInterceptor = new Interceptor(ghUSP10DLL, "ScriptIsComplex", &GraphiteEnabledScriptIsComplex);
 			break;
 		case DLL_PROCESS_DETACH:
 //			delete gpGraphiteScriptStringAnalysisMap;
 			delete gpGlyphsToTextSourceMap;
-			FreeScriptProperties();
-			gpScriptPlaceSurrogate->RemoveSurrogate();
-			delete gpScriptPlaceSurrogate;
-			gpScriptShapeSurrogate->RemoveSurrogate();
-			delete gpScriptShapeSurrogate;
+//			FreeScriptProperties();
+			delete gpScriptPlaceInterceptor;
+			delete gpScriptShapeInterceptor;
+			delete gpScriptIsComplexInterceptor;
 			break;
 		case DLL_THREAD_ATTACH:
 			break;

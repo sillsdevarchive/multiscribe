@@ -12,21 +12,22 @@ void disasm(BYTE* iptr0, DWORD* osizeptr);
 
 
 //license gpl /www.delikon.de
-class Surrogate{
+class Interceptor{
 
 public:
-	Surrogate(LPCSTR szLibFileName, LPCSTR szOriginalFuncName, LPVOID ReplaceFuncAddr);
-	Surrogate(LPVOID OriginalFunctionAddr, LPVOID ReplaceFuncAddr);
-	~Surrogate();
+	Interceptor(LPCSTR szLibFileName, LPCSTR szOriginalFuncName, LPVOID InterceptingFuncAddr);
+	Interceptor(HINSTANCE hLibrary, LPCSTR szOriginalFuncName, LPVOID InterceptingFuncAddr);
+	Interceptor(LPVOID OriginalFunctionAddr, LPVOID InterceptingFuncAddr);
+	~Interceptor();
 
 	bool IsInstalled();
-	void InstallSurrogate();
-	void RemoveSurrogate();
-	LPVOID GetSurrogate();
-	LPVOID GetOrginal();
+	void InstallInterceptor();
+	void RemoveInterceptor();
+	LPVOID GetInterceptor();
+	LPVOID GetOriginal();
 
 private:
-	void Initialize(LPVOID OriginalFunctionAddr, LPVOID ReplaceFuncAddr);
+	void Initialize(HINSTANCE hLibrary, LPVOID OriginalFunctionAddr, LPVOID InterceptingFuncAddr);
 
 	bool m_isInstalled;
 
@@ -35,7 +36,7 @@ private:
 #endif
 
 	LPVOID m_OriginalFuncAddr;
-	LPVOID m_ReplaceFuncAddr;
+	LPVOID m_InterceptingFuncAddr;
 
 	BYTE* m_OriginalFuncByteCodePrefix;
 
