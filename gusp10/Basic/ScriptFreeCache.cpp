@@ -1,8 +1,9 @@
 #include "../stdafx.h"
+#include "../GlyphsToTextSourceMap.h"
+
 #pragma comment(linker, "/export:ScriptFreeCache=_usp10.ScriptFreeCache")
 
 LPVOID GetOriginalScriptFreeCache();
-void FreeTextSources(LPVOID p);
 
 /////   ScriptFreeCache
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTFREECACHE) (
@@ -18,7 +19,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptFreeCache(
 	//WRAP_BEGIN(ScriptFreeCache, LPFNSCRIPTFREECACHE)
 	LPFNSCRIPTFREECACHE ScriptFreeCache = (LPFNSCRIPTFREECACHE) GetOriginalScriptFreeCache();
 
-	FreeTextSources(*psc);
+	FreeGlyphPositionsForSession(*psc);
 	HRESULT hResult = ScriptFreeCache(psc);
 	return hResult;
 	//WRAP_END

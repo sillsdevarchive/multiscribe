@@ -1,16 +1,22 @@
 #pragma once
 
 #include <map>
-#include "TextSource.h"
+#include <vector>
 
-typedef std::map<std::basic_string<WORD>, TextSource> GLYPHS_TO_TEXTSOURCE_MAP;
-typedef std::map<LPVOID, GLYPHS_TO_TEXTSOURCE_MAP> TEXTSOURCES;
+struct GlyphPositions{
+	std::vector<int> advanceWidths;
+	std::vector<GOFFSET> goffsets;
+	ABC abc;
+};
 
-TextSource *
-GetTextSource(LPVOID p, const WORD * glyphs, const int cGlyphs);
+typedef std::map<LPVOID, GlyphPositions> GLYPHPOSITIONS_MAP;
+typedef std::map<LPVOID, GLYPHPOSITIONS_MAP> SESSION_TO_GLYPHPOSITIONS;
+
+GlyphPositions *
+GetGlyphPositions(LPVOID pSessionKey, LPVOID pKey);
+
+GlyphPositions *
+CreateGlyphPositions(LPVOID pSessionKey, LPVOID pKey, int size);
 
 void
-CreateTextSource(LPVOID p, const WORD * glyphs, const int cGlyphs, TextSource& ts);
-
-void
-FreeTextSources(LPVOID p);
+FreeGlyphPositionsForSession(LPVOID pSessionKey);

@@ -40,7 +40,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptFreeCache(
 //void FreeScriptProperties();
 
 //static GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP * gpGraphiteScriptStringAnalysisMap;
-static TEXTSOURCES * gpTextSources;
+static SESSION_TO_GLYPHPOSITIONS * gpGlyphPositions;
 static Interceptor * gpScriptShapeInterceptor;
 static Interceptor * gpScriptPlaceInterceptor;
 static Interceptor * gpScriptIsComplexInterceptor;
@@ -113,7 +113,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			ghUSP10DLL = LoadLibraryA("_usp10.dll");
 			MakeAllScriptPropertiesComplex();
 //			gpGraphiteScriptStringAnalysisMap = new GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP();
-			gpTextSources = new TEXTSOURCES();
+			gpGlyphPositions = new SESSION_TO_GLYPHPOSITIONS();
 			gpScriptPlaceInterceptor = new Interceptor(ghUSP10DLL, "ScriptPlace", &GraphiteEnabledScriptPlace);
 			gpScriptShapeInterceptor = new Interceptor(ghUSP10DLL, "ScriptShape", &GraphiteEnabledScriptShape);
 			gpScriptIsComplexInterceptor = new Interceptor(ghUSP10DLL, "ScriptIsComplex", &GraphiteEnabledScriptIsComplex);
@@ -121,7 +121,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			break;
 		case DLL_PROCESS_DETACH:
 //			delete gpGraphiteScriptStringAnalysisMap;
-			delete gpTextSources;
+			delete gpGlyphPositions;
 //			FreeScriptProperties();
 			delete gpScriptPlaceInterceptor;
 			delete gpScriptShapeInterceptor;
@@ -202,45 +202,44 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
 //static GLYPHS_TO_TEXTSOURCE_MAP * gpGlyphsToTextSourceMap;
 
-TextSource *
-GetTextSource(LPVOID p, const WORD * glyphs, const int cGlyphs){
-	assert(p);
-	assert(glyphs);
-	assert(gpTextSources);
-	if(!gpTextSources){
+GlyphPositions *
+GetGlyphPositions(LPVOID pSessionKey, LPVOID pKey){
+	assert(pSessionKey);
+	assert(pKey);
+	assert(gpGlyphPositions);
+	if(!pSessionKey || !pKey || !gpGlyphPositions){
 		return NULL;
 	}
 
-	GLYPHS_TO_TEXTSOURCE_MAP& glyphsToTextSourceMap = (*gpTextSources)[p];
+	GLYPHPOSITIONS_MAP& glyphPositionsMap = (*gpGlyphPositions)[pSessionKey];
 
-	std::basic_string<WORD> rgGlyphs(glyphs, glyphs+cGlyphs);
-	GLYPHS_TO_TEXTSOURCE_MAP::iterator it;
-	it = glyphsToTextSourceMap.find(rgGlyphs);
-	if(it == glyphsToTextSourceMap.end()){
+	GLYPHPOSITIONS_MAP::iterator it;
+	it = glyphPositionsMap.find(pKey);
+	if(it == glyphPositionsMap.end()){
 		return NULL;
 	}
-	TextSource* pTextSource = &it->second;
+	GlyphPositions* pTextSource = &it->second;
 	return pTextSource;
 }
 
-void
-CreateTextSource(LPVOID p, const WORD * glyphs, const int cGlyphs, TextSource& ts){
-	assert(p);
-	assert(glyphs);
-	assert(gpTextSources);
+GlyphPositions *
+CreateGlyphPositions(LPVOID pSessionKey, LPVOID pKey, int size){
+	assert(pSessionKey);
+	assert(pKey);
+	assert(gpGlyphPositions);
 
-	if(p && glyphs && gpTextSources){
-		std::basic_string<WORD> rgGlyphs(glyphs, glyphs+cGlyphs);
-		(*gpTextSources)[p][rgGlyphs] = ts;
-	}
+	GlyphPositions & glyphPositions = (*gpGlyphPositions)[pSessionKey][pKey];
+	glyphPositions.advanceWidths.resize(size);
+	glyphPositions.goffsets.resize(size);
+	return &glyphPositions;
 }
 
-void FreeTextSources(LPVOID p)
+void FreeGlyphPositionsForSession(LPVOID pSessionKey)
 {
-	assert(p);
-	assert(gpTextSources);
-	if(!gpTextSources){
+	assert(pSessionKey);
+	assert(gpGlyphPositions);
+	if(!pSessionKey || !gpGlyphPositions){
 		return;
 	}
-	gpTextSources->erase(p);
+	gpGlyphPositions->erase(pSessionKey);
 }
