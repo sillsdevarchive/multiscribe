@@ -44,7 +44,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 
 	if(IsGraphiteFont(hdc))
 	{
-		if(!psc)
+		if(!*psc)
 		{
 			HRESULT hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
 			hResult;
@@ -108,8 +108,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 
 		delete[] rgFirstGlyphOfCluster;
 
-		TextSource * pTextSource = CreateTextSource(pwOutGlyphs, *pcGlyphs);
-		*pTextSource = textSource;
+		CreateTextSource(*psc, pwOutGlyphs, *pcGlyphs, textSource);
 		return S_OK;
 	}
 	else

@@ -1,6 +1,10 @@
-#include "../stdafx.h"
+#ifndef COLORIZED
+#pragma comment(linker, "/export:ScriptTextOut=_usp10.ScriptTextOut")
 
-//#pragma comment(linker, "/export:ScriptTextOut=_usp10.ScriptTextOut")
+#else
+#pragma comment(linker, "/export:ScriptTextOut=GraphiteEnabledScriptTextOut")
+
+#include "../stdafx.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// ScriptTextOut
@@ -61,3 +65,6 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptTextOut(
 #ifdef __cplusplus
 }
 #endif
+
+
+#endif COLORIZED

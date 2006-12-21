@@ -1,6 +1,11 @@
+#ifndef COLORIZED
+#pragma comment(linker, "/export:ScriptStringOut=_usp10.ScriptStringOut")
+
+#else
+#pragma comment(linker, "/export:ScriptStringOut=GraphiteEnabledScriptStringOut")
+
 #include "../stdafx.h"
 //#include "../GraphiteScriptStringAnalysis.h"
-//#pragma comment(linker, "/export:ScriptStringOut=_usp10.ScriptStringOut")
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 ///   ScriptStringOut
@@ -89,3 +94,4 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringOut(
 #ifdef __cplusplus
 }
 #endif
+#endif COLORIZED

@@ -49,7 +49,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 		//	WRAP_END_NO_RETURN
 		//}
 
-		TextSource * pTextSource = GetTextSource(pwGlyphs, cGlyphs);
+		TextSource * pTextSource = GetTextSource(*psc, pwGlyphs, cGlyphs);
 		if(!pTextSource){
 			//fallback
 			return ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);

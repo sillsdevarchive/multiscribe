@@ -34,13 +34,17 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptIsComplex(
 	int                                 cInChars,       //In  Length in characters
 	DWORD                               dwFlags);       //In  Flags (see above)
 
+__checkReturn HRESULT WINAPI GraphiteEnabledScriptFreeCache(
+	__deref_inout_ecount(1) SCRIPT_CACHE   *psc);       //InOut  Cache handle
+
 //void FreeScriptProperties();
 
 //static GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP * gpGraphiteScriptStringAnalysisMap;
-static GLYPHS_TO_TEXTSOURCE_MAP * gpGlyphsToTextSourceMap;
+static TEXTSOURCES * gpTextSources;
 static Interceptor * gpScriptShapeInterceptor;
 static Interceptor * gpScriptPlaceInterceptor;
 static Interceptor * gpScriptIsComplexInterceptor;
+static Interceptor * gpScriptFreeCacheInterceptor;
 
 static HINSTANCE ghUSP10DLL;
 
@@ -59,6 +63,10 @@ LPVOID GetOriginalScriptIsComplex()
 	return gpScriptIsComplexInterceptor->GetOriginal();
 }
 
+LPVOID GetOriginalScriptFreeCache()
+{
+	return gpScriptFreeCacheInterceptor->GetOriginal();
+}
 
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETPROPERTIES) (
 	__deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,        // Out  Receives pointer to table of pointers to properties indexed by script
@@ -105,18 +113,20 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			ghUSP10DLL = LoadLibraryA("_usp10.dll");
 			MakeAllScriptPropertiesComplex();
 //			gpGraphiteScriptStringAnalysisMap = new GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP();
-			gpGlyphsToTextSourceMap = new GLYPHS_TO_TEXTSOURCE_MAP();
+			gpTextSources = new TEXTSOURCES();
 			gpScriptPlaceInterceptor = new Interceptor(ghUSP10DLL, "ScriptPlace", &GraphiteEnabledScriptPlace);
 			gpScriptShapeInterceptor = new Interceptor(ghUSP10DLL, "ScriptShape", &GraphiteEnabledScriptShape);
 			gpScriptIsComplexInterceptor = new Interceptor(ghUSP10DLL, "ScriptIsComplex", &GraphiteEnabledScriptIsComplex);
+			gpScriptFreeCacheInterceptor = new Interceptor(ghUSP10DLL, "ScriptFreeCache", &GraphiteEnabledScriptFreeCache);
 			break;
 		case DLL_PROCESS_DETACH:
 //			delete gpGraphiteScriptStringAnalysisMap;
-			delete gpGlyphsToTextSourceMap;
+			delete gpTextSources;
 //			FreeScriptProperties();
 			delete gpScriptPlaceInterceptor;
 			delete gpScriptShapeInterceptor;
 			delete gpScriptIsComplexInterceptor;
+			delete gpScriptFreeCacheInterceptor;
 			break;
 		case DLL_THREAD_ATTACH:
 			break;
@@ -190,39 +200,47 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 //}
 
 
-TextSource * const
-GetTextSource(const WORD * glyphs, const int cGlyphs){
+//static GLYPHS_TO_TEXTSOURCE_MAP * gpGlyphsToTextSourceMap;
+
+TextSource *
+GetTextSource(LPVOID p, const WORD * glyphs, const int cGlyphs){
+	assert(p);
 	assert(glyphs);
-	assert(gpGlyphsToTextSourceMap);
-	if(!gpGlyphsToTextSourceMap){
+	assert(gpTextSources);
+	if(!gpTextSources){
 		return NULL;
 	}
+
+	GLYPHS_TO_TEXTSOURCE_MAP& glyphsToTextSourceMap = (*gpTextSources)[p];
+
 	std::basic_string<WORD> rgGlyphs(glyphs, glyphs+cGlyphs);
-	GLYPHS_TO_TEXTSOURCE_MAP::const_iterator it;
-	it = gpGlyphsToTextSourceMap->find(rgGlyphs);
-	if(it == gpGlyphsToTextSourceMap->end()){
+	GLYPHS_TO_TEXTSOURCE_MAP::iterator it;
+	it = glyphsToTextSourceMap.find(rgGlyphs);
+	if(it == glyphsToTextSourceMap.end()){
 		return NULL;
 	}
-	return it->second;
+	TextSource* pTextSource = &it->second;
+	return pTextSource;
 }
 
-TextSource * const
-CreateTextSource(const WORD * glyphs, const int cGlyphs){
+void
+CreateTextSource(LPVOID p, const WORD * glyphs, const int cGlyphs, TextSource& ts){
+	assert(p);
 	assert(glyphs);
-	assert(gpGlyphsToTextSourceMap);
-	if(!gpGlyphsToTextSourceMap){
-		return NULL;
-	}
+	assert(gpTextSources);
 
-	std::basic_string<WORD> rgGlyphs(glyphs, glyphs+cGlyphs);
-	GLYPHS_TO_TEXTSOURCE_MAP::const_iterator it;
-	it = gpGlyphsToTextSourceMap->find(rgGlyphs);
-	if(it == gpGlyphsToTextSourceMap->end()){
-		TextSource* pTextSource = new TextSource();
-		gpGlyphsToTextSourceMap->insert(std::make_pair(rgGlyphs, pTextSource));
-		return pTextSource;
+	if(p && glyphs && gpTextSources){
+		std::basic_string<WORD> rgGlyphs(glyphs, glyphs+cGlyphs);
+		(*gpTextSources)[p][rgGlyphs] = ts;
 	}
-	else{
-		return it->second;
+}
+
+void FreeTextSources(LPVOID p)
+{
+	assert(p);
+	assert(gpTextSources);
+	if(!gpTextSources){
+		return;
 	}
+	gpTextSources->erase(p);
 }

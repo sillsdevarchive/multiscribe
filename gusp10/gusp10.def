@@ -3,9 +3,6 @@ EXPORTS
 ;	ScriptGetProperties=GraphiteEnabledScriptGetProperties
 ;	ScriptIsComplex=GraphiteEnabledScriptIsComplex
 
-	ScriptStringOut=GraphiteEnabledScriptStringOut
-
-	ScriptTextOut=GraphiteEnabledScriptTextOut
 
 	ScriptPlaceOpenType=GraphiteEnabledScriptPlaceOpenType
 	ScriptShapeOpenType=GraphiteEnabledScriptShapeOpenType
