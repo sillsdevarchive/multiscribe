@@ -1,7 +1,10 @@
+#pragma comment(linker, "/export:ScriptPlaceOpenType=_usp10.ScriptPlaceOpenType")
+
 #include "../stdafx.h"
 #include "../TextSource.h"
 #include <math.h>
-//#pragma comment(linker, "/export:ScriptPlaceOpenType=_usp10.ScriptPlaceOpenType")
+
+LPVOID GetOriginalScriptPlaceOpenType();
 
 /// ScriptPlaceOpenType
 
@@ -30,9 +33,9 @@ typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTPLACEOPENTYPE)(
 	__out_opt                  ABC                    *pABC);          // Out   Composite ABC for the whole run (Optional)
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 	__in_opt                   HDC                     hdc,            // In    Optional (see under caching)
@@ -61,6 +64,8 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 	if(!hdc){ //TODO: keep a cache
 		return E_PENDING;
 	}
+	LPFNSCRIPTPLACEOPENTYPE ScriptPlaceOpenType = (LPFNSCRIPTPLACEOPENTYPE) GetOriginalScriptPlaceOpenType();
+
 	if(IsGraphiteFont(hdc))
 	{
 		//if(!psc)
@@ -127,9 +132,10 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 		if(i != cGlyphs){
 			assert(false);
 			//fallback
-			WRAP_BEGIN(ScriptPlaceOpenType, LPFNSCRIPTPLACEOPENTYPE)
-			hResult = ScriptPlaceOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,pwLogClust,pCharProps,cChars,pwGlyphs,pGlyphProps,cGlyphs,piAdvance,pGoffset,pABC);
-			WRAP_END
+//			WRAP_BEGIN(ScriptPlaceOpenType, LPFNSCRIPTPLACEOPENTYPE)
+			HRESULT hResult = ScriptPlaceOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,pwLogClust,pCharProps,cChars,pwGlyphs,pGlyphProps,cGlyphs,piAdvance,pGoffset,pABC);
+	  return hResult;
+//			WRAP_END
 		}
 
 		if(pABC){ //TODO
@@ -140,15 +146,18 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 			pABC->abcB = static_cast<UINT>(ceil(seg.advanceWidth())); // drawn portion
 			pABC->abcC = 0; // space to add to trailing edge (may be negative)
 		}
+	psa->eScript = SCRIPT_UNDEFINED; // it seems that the script engine's text out may be trying to do special things especially in the case of arabic
+
 		return S_OK;
 	}
 	else {
-		WRAP_BEGIN(ScriptPlaceOpenType, LPFNSCRIPTPLACEOPENTYPE)
-		hResult = ScriptPlaceOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,pwLogClust,pCharProps,cChars,pwGlyphs,pGlyphProps,cGlyphs,piAdvance,pGoffset,pABC);
-		WRAP_END
+//		WRAP_BEGIN(ScriptPlaceOpenType, LPFNSCRIPTPLACEOPENTYPE)
+		HRESULT hResult = ScriptPlaceOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,pwLogClust,pCharProps,cChars,pwGlyphs,pGlyphProps,cGlyphs,piAdvance,pGoffset,pABC);
+	return hResult;
+//		WRAP_END
 	}
 }
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif

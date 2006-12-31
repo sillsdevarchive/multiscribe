@@ -38,7 +38,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 	__out_ecount_part(cMaxGlyphs, *pcGlyphs) SCRIPT_VISATTR *psva,          // Out   Visual glyph attributes
 	__out_ecount(1) int                                     *pcGlyphs)     // Out   Count of glyphs generated
 {
-	if(!hdc){ //TODO: keep a cache
+	if(!hdc){
 		return E_PENDING;
 	}
 	LPFNSCRIPTSHAPE ScriptShape = (LPFNSCRIPTSHAPE) GetOriginalScriptShape();
@@ -48,13 +48,15 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 		if(!*psc)
 		{
 			HRESULT hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
-			hResult;
-			//WRAP_BEGIN(ScriptShape, LPFNSCRIPTSHAPE)
-			//// only to setup the cache correctly:
-			//hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
-			//WRAP_END_NO_RETURN
+	  if( FAILED(hResult)){
+		return hResult;
+	  }
+	  FreeGlyphPositionsForSession(*psc);
 		}
 
+	if(psa->fRTL){
+	  assert(psa->fLogicalOrder); // no support yet for visual order
+	}
 		TextSource textSource(pwcChars, cChars);
 		textSource.setRightToLeft(psa->fRTL);
 
@@ -69,29 +71,29 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 		std::pair<gr::GlyphIterator, gr::GlyphIterator> prGlyphIterators =
 			seg.glyphs();
 
-		std::vector<gr::GlyphInfo> rgGlyphInfo;
-
+	int cGlyphs = 0;
 		for(gr::GlyphIterator it = prGlyphIterators.first;
 							  it != prGlyphIterators.second;
 							  ++it){
-			rgGlyphInfo.push_back(*it);
+			++cGlyphs;
 		}
 
 		// if the output buffer length, cMaxGlyphs, is insufficient.
-		if(rgGlyphInfo.size() >  static_cast<size_t>(std::max(cMaxGlyphs,0))){
+		if(cGlyphs >  std::max(cMaxGlyphs,0)){
 			return E_OUTOFMEMORY;
 		}
 
-		*pcGlyphs = static_cast<int>(rgGlyphInfo.size());
+		*pcGlyphs = cGlyphs;
 
-		GlyphPositions* pGlyphPositions = CreateGlyphPositions(*psc, psa, *pcGlyphs);
+		GlyphPositions* pGlyphPositions = CreateGlyphPositions(*psc, psa, cGlyphs);
 
 		int * rgFirstGlyphOfCluster = new int [cChars];
-		bool * rgIsClusterStart = new bool [*pcGlyphs];
+		int * rgLastGlyphOfCluster = new int [cChars];
+		bool * rgIsClusterStart = new bool [cGlyphs];
+		bool * rgIsClusterEnd = new bool [cGlyphs];
 		int cCharsX, cgidX;
-		seg.getUniscribeClusters(rgFirstGlyphOfCluster, cChars, &cCharsX,
-								 rgIsClusterStart, *pcGlyphs, &cgidX);
-
+		seg.getUniscribeClusters(rgFirstGlyphOfCluster, rgLastGlyphOfCluster, cChars, &cCharsX,
+								 rgIsClusterStart, rgIsClusterEnd, cGlyphs, &cgidX);
 
 		float xClusterEnd = 0.0;
 		int i = 0;
@@ -100,12 +102,18 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 							  ++it, ++i){
 
 			pwOutGlyphs[i] = it->glyphID();
-			psva[i].fClusterStart = rgIsClusterStart[i];
-			psva[i].fDiacritic = it->isAttached(); // VERIFY
+	  psva[i].fClusterStart = (psa->fRTL)?rgIsClusterStart[i]: rgIsClusterEnd[i];
+		  psva[i].fDiacritic = (psva[i].fClusterStart)?false:it->isAttached();
 			psva[i].fZeroWidth = false; // TODO: when does this need to be set?
 			psva[i].uJustification = SCRIPT_JUSTIFY_NONE; //TODO: when does this need to change
 
-			if(it->isAttached()){
+	  if(it->isAttached()){
+		float xOrigin = it->origin();
+		if(psa->fRTL){
+		  assert (xOrigin <= 0);
+		  xOrigin *= -1;
+		}
+
 				//The advance width' of a glyph is the movement in the
 				//direction of writing from the starting point for rendering
 				//that glyph to the starting point for rendering the next glyph.
@@ -113,12 +121,18 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 				//The origin of each subsequent glyph is offset from that of the
 				//previous glyph by the advance values of the previous glyph.
 				//
-				if(//rgIsClusterStart[i]){//
-				   it == it->attachedClusterBase()){
+				if(it == it->attachedClusterBase()){
+		  float advance = it->attachedClusterAdvance();
+		  assert(advance > 0);
+
 					//Base glyphs generally have a non-zero advance width
 					//and generally have a glyph offset of (0, 0).
-					pGlyphPositions->advanceWidths[i] = static_cast<int>(ceil(it->attachedClusterAdvance()));   // x offset for combining glyph
-					xClusterEnd = it->origin() + it->attachedClusterAdvance();
+					pGlyphPositions->advanceWidths[i] = static_cast<int>(ceil(advance));   // x offset for combining glyph
+
+		  xClusterEnd = xOrigin;
+		  if(!psa->fRTL){
+			xClusterEnd += advance;
+		  }
 					pGlyphPositions->goffsets[i].du = 0;
 				}
 				else {
@@ -126,7 +140,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 					//generally have an offset that places them correctly in
 					//relation to the nearest preceding base glyph.
 					pGlyphPositions->advanceWidths[i] = 0;
-					pGlyphPositions->goffsets[i].du = static_cast<int>(floor(it->origin() - xClusterEnd));
+			  pGlyphPositions->goffsets[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
 				}
 			}
 			else {
@@ -137,12 +151,14 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 		}
 
 		delete[] rgIsClusterStart;
+		delete[] rgIsClusterEnd;
 
-		for(int i=0; i < cChars; ++i){
-			pwLogClust[i] = static_cast<WORD>(rgFirstGlyphOfCluster[i]);
-		}
+	for(int i=0; i < cChars; ++i){
+	  pwLogClust[i] = static_cast<WORD>((psa->fRTL)?rgFirstGlyphOfCluster[i]:rgLastGlyphOfCluster[i]);
+	  }
 
 		delete[] rgFirstGlyphOfCluster;
+		delete[] rgLastGlyphOfCluster;
 
 		//TODO: really the segment should have public properties for
 		// members, m_dxsLeftOverhang, m_dxsRightOverhang and m_dxsVisibleWidth
@@ -151,15 +167,13 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 		pGlyphPositions->abc.abcB = static_cast<UINT>(ceil(seg.advanceWidth())); // drawn portion
 		pGlyphPositions->abc.abcC = 0; // space to add to trailing edge (may be negative)
 
+	psa->eScript = SCRIPT_UNDEFINED; // it seems that the script engine's text out may be trying to do special things especially in the case of arabic
 		return S_OK;
 	}
 	else
 	{
 		HRESULT hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
 		return hResult;
-		//WRAP_BEGIN(ScriptShape, LPFNSCRIPTSHAPE)
-		//hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
-	 //   WRAP_END
 	}
 }
 //#ifdef __cplusplus

@@ -4,7 +4,7 @@
 #include "stdafx.h"
 //#include "GraphiteScriptStringAnalysis.h"
 #include "GlyphsToTextSourceMap.h"
-#include "hook.h"
+#include "interceptor.h"
 
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 	HDC                                         hdc,        // In    Optional (see under caching)
@@ -37,12 +37,60 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptIsComplex(
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptFreeCache(
 	__deref_inout_ecount(1) SCRIPT_CACHE   *psc);       //InOut  Cache handle
 
+__checkReturn HRESULT WINAPI GraphiteEnabledScriptShapeOpenType(
+	__in_opt                   HDC                     hdc,            // In    Optional (see under caching)
+	__inout                    SCRIPT_CACHE           *psc,            // InOut Cache handle
+	__inout                    SCRIPT_ANALYSIS        *psa,            // InOut Result of ScriptItemize (may have fNoGlyphIndex set)
+
+	__in                       OPENTYPE_TAG            tagScript,      // In    Font script tag for shaping
+	__in                       OPENTYPE_TAG            tagLangSys,     // In    Font language system tag for shaping
+	__in_ecount_opt(cRanges)   int                    *rcRangeChars,      // In    Array of number of characters per range
+	__in_ecount_opt(cRanges)   TEXTRANGE_PROPERTIES  **rpRangeProperties, // In    Array of range properties (for each range)
+	__in                       int                     cRanges,           // In    Number of ranges
+
+	__in_ecount(cChars)        const WCHAR            *pwcChars,       // In    Logical unicode run
+	__in                       int                     cChars,         // In    Length of unicode run
+	__in                       int                     cMaxGlyphs,     // In    Max glyphs to generate
+
+	__out_ecount_full(cChars)  WORD                   *pwLogClust,     // Out   Logical clusters
+	__out_ecount_full(cChars)  SCRIPT_CHARPROP        *pCharProps,     // Out   Output buffer for character properties
+
+	__out_ecount_part(cMaxGlyphs, *pcGlyphs) WORD                   *pwOutGlyphs,    // Out   Output glyph buffer
+	__out_ecount_part(cMaxGlyphs, *pcGlyphs) SCRIPT_GLYPHPROP       *pOutGlyphProps, // Out   Visual glyph attributes
+	__out                                    int                    *pcGlyphs);      // Out   Count of glyphs generated
+
+__checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
+	__in_opt                   HDC                     hdc,            // In    Optional (see under caching)
+	__inout                    SCRIPT_CACHE           *psc,            // InOut Cache handle
+	__inout                    SCRIPT_ANALYSIS        *psa,            // InOut Result of ScriptItemize (may have fNoGlyphIndex set)
+
+	__in                       OPENTYPE_TAG            tagScript,      // In    Font script tag for shaping
+	__in                       OPENTYPE_TAG            tagLangSys,     // In    Font language system tag for shaping
+	__in_ecount_opt(cRanges)   int                    *rcRangeChars,      // In    Array of number of characters per range
+	__in_ecount_opt(cRanges)   TEXTRANGE_PROPERTIES  **rpRangeProperties, // In    Array of range properties (for each range)
+	__in                       int                     cRanges,           // In    Number of ranges
+
+	__in_ecount(cChars)        const WCHAR            *pwcChars,       // In    Logical unicode run
+	__in_ecount(cChars)        WORD                   *pwLogClust,     // In    Logical clusters
+	__in_ecount(cChars)        SCRIPT_CHARPROP        *pCharProps,     // In    Output buffer for character properties
+	__in                       int                     cChars,         // In    Length of unicode run
+
+	__in_ecount(cGlyphs)       const WORD             *pwGlyphs,       // In    Glyph buffer from prior ScriptShape call
+	__in_ecount(cGlyphs)       const SCRIPT_GLYPHPROP *pGlyphProps,    // In    Glyph properties
+	__in                       int                     cGlyphs,        // In    Number of glyphs
+
+	__out_ecount_full(cGlyphs) int                    *piAdvance,      // Out   Advance widths
+	__out_ecount_full(cGlyphs) GOFFSET                *pGoffset,       // Out   x,y offset for combining glyph
+	__out_opt                  ABC                    *pABC);          // Out   Composite ABC for the whole run (Optional)
+
 //void FreeScriptProperties();
 
 //static GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP * gpGraphiteScriptStringAnalysisMap;
 static SESSION_TO_GLYPHPOSITIONS * gpGlyphPositions;
 static Interceptor * gpScriptShapeInterceptor;
 static Interceptor * gpScriptPlaceInterceptor;
+static Interceptor * gpScriptShapeOpenTypeInterceptor;
+static Interceptor * gpScriptPlaceOpenTypeInterceptor;
 static Interceptor * gpScriptIsComplexInterceptor;
 static Interceptor * gpScriptFreeCacheInterceptor;
 
@@ -56,6 +104,16 @@ LPVOID GetOriginalScriptShape()
 LPVOID GetOriginalScriptPlace()
 {
 	return gpScriptPlaceInterceptor->GetOriginal();
+}
+
+LPVOID GetOriginalScriptShapeOpenType()
+{
+	return gpScriptShapeOpenTypeInterceptor->GetOriginal();
+}
+
+LPVOID GetOriginalScriptPlaceOpenType()
+{
+	return gpScriptPlaceOpenTypeInterceptor->GetOriginal();
 }
 
 LPVOID GetOriginalScriptIsComplex()
@@ -111,11 +169,30 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	switch(ul_reason_for_call){
 		case DLL_PROCESS_ATTACH:
 			ghUSP10DLL = LoadLibraryA("_usp10.dll");
+	  if(!ghUSP10DLL) {
+		// try again, this time using the specified path used to load this.
+		char szModuleFileName[MAX_PATH];
+		DWORD cbModuleFileName = GetModuleFileNameA(hModule, &szModuleFileName[0], MAX_PATH-1);
+		if(cbModuleFileName != 0) {
+		  char szFileName[_MAX_FNAME];
+		  char szExt[_MAX_EXT];
+		  _splitpath(szModuleFileName, NULL, NULL, &szFileName[0], &szExt[0]);
+		  // remove filename and extension
+		  szModuleFileName[cbModuleFileName - strlen(szFileName) - strlen(szExt)] = NULL;
+		  strcat(szModuleFileName, "_usp10.dll");
+		  ghUSP10DLL = LoadLibraryA(szModuleFileName);
+		}
+		if(!ghUSP10DLL) {
+		  return FALSE;
+		}
+	  }
 			MakeAllScriptPropertiesComplex();
 //			gpGraphiteScriptStringAnalysisMap = new GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP();
 			gpGlyphPositions = new SESSION_TO_GLYPHPOSITIONS();
 			gpScriptPlaceInterceptor = new Interceptor(ghUSP10DLL, "ScriptPlace", &GraphiteEnabledScriptPlace);
 			gpScriptShapeInterceptor = new Interceptor(ghUSP10DLL, "ScriptShape", &GraphiteEnabledScriptShape);
+			gpScriptPlaceOpenTypeInterceptor = new Interceptor(ghUSP10DLL, "ScriptPlaceOpenType", &GraphiteEnabledScriptPlaceOpenType);
+			gpScriptShapeOpenTypeInterceptor = new Interceptor(ghUSP10DLL, "ScriptShapeOpenType", &GraphiteEnabledScriptShapeOpenType);
 			gpScriptIsComplexInterceptor = new Interceptor(ghUSP10DLL, "ScriptIsComplex", &GraphiteEnabledScriptIsComplex);
 			gpScriptFreeCacheInterceptor = new Interceptor(ghUSP10DLL, "ScriptFreeCache", &GraphiteEnabledScriptFreeCache);
 			break;
@@ -125,6 +202,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 //			FreeScriptProperties();
 			delete gpScriptPlaceInterceptor;
 			delete gpScriptShapeInterceptor;
+			delete gpScriptPlaceOpenTypeInterceptor;
+			delete gpScriptShapeOpenTypeInterceptor;
 			delete gpScriptIsComplexInterceptor;
 			delete gpScriptFreeCacheInterceptor;
 			break;

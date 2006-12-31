@@ -1,6 +1,8 @@
+#pragma comment(linker, "/export:ScriptShapeOpenType=_usp10.ScriptShapeOpenType")
+
 #include "../stdafx.h"
 #include "../TextSource.h"
-//#pragma comment(linker, "/export:ScriptShapeOpenType=_usp10.ScriptShapeOpenType")
+LPVOID GetOriginalScriptShapeOpenType();
 
 /// ScriptShapeOpenType
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSHAPEOPENTYPE) (
@@ -25,9 +27,9 @@ typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSHAPEOPENTYPE) (
 	__out_ecount_part(cMaxGlyphs, *pcGlyphs) SCRIPT_GLYPHPROP       *pOutGlyphProps, // Out   Visual glyph attributes
 	__out                                    int                    *pcGlyphs);      // Out   Count of glyphs generated
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptShapeOpenType(
 	__in_opt                   HDC                     hdc,            // In    Optional (see under caching)
@@ -54,15 +56,19 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShapeOpenType(
 	if(!hdc){ //TODO: keep a cache
 		return E_PENDING;
 	}
+	LPFNSCRIPTSHAPEOPENTYPE ScriptShapeOpenType = (LPFNSCRIPTSHAPEOPENTYPE) GetOriginalScriptShapeOpenType();
+
 	if(IsGraphiteFont(hdc))
 	{
-		//if(!psc)
-		//{
+		if(!*psc)
+		{
+	  HRESULT hResult = ScriptShapeOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,cChars,cMaxGlyphs,pwLogClust,pCharProps,pwOutGlyphs,pOutGlyphProps,pcGlyphs);
+	  hResult;
 		//	WRAP_BEGIN(ScriptShapeOpenType, LPFNSCRIPTSHAPEOPENTYPE)
 		//	// only to setup the cache correctly:
 		//	hResult = ScriptShapeOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,cChars,cMaxGlyphs,pwLogClust,pCharProps,pwOutGlyphs,pOutGlyphProps,pcGlyphs);
 		//	WRAP_END_NO_RETURN
-		//}
+		}
 
 		 TextSource textSource(pwcChars, cChars);
 		 textSource.setRightToLeft(psa->fRTL);
@@ -93,38 +99,42 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShapeOpenType(
 
 		*pcGlyphs = static_cast<int>(rgGlyphInfo.size());
 
-
-
 		int * rgFirstGlyphOfCluster = new int [cChars];
+		int * rgLastGlyphOfCluster = new int [cChars];
 		bool * rgIsClusterStart = new bool [*pcGlyphs];
+		bool * rgIsClusterEnd = new bool [*pcGlyphs];
 		int cCharsX, cgidX;
-		seg.getUniscribeClusters(rgFirstGlyphOfCluster, cChars, &cCharsX,
-								 rgIsClusterStart, *pcGlyphs, &cgidX);
+		seg.getUniscribeClusters(rgFirstGlyphOfCluster, rgLastGlyphOfCluster,
+				 cChars, &cCharsX,
+								 rgIsClusterStart, rgIsClusterEnd, *pcGlyphs, &cgidX);
 
 
 		for(int i=0; i != *pcGlyphs; ++i){
 		  pwOutGlyphs[i] = rgGlyphInfo[i].glyphID();
-		  pOutGlyphProps[i].sva.fClusterStart = rgIsClusterStart[i];
-		  pOutGlyphProps[i].sva.fDiacritic = (rgIsClusterStart[i])?false:rgGlyphInfo[i].isAttached(); // VERIFY
+		  pOutGlyphProps[i].sva.fClusterStart = (psa->fRTL)?rgIsClusterStart[i]: rgIsClusterEnd[i];
+		  pOutGlyphProps[i].sva.fDiacritic = (pOutGlyphProps[i].sva.fClusterStart)?false:rgGlyphInfo[i].isAttached(); // VERIFY
 		  pOutGlyphProps[i].sva.fZeroWidth = false; // TODO: when does this need to be set?
 		  pOutGlyphProps[i].sva.uJustification = SCRIPT_JUSTIFY_NONE; //TODO: when does this need to change
 		}
 
 		delete[] rgIsClusterStart;
+		delete[] rgIsClusterEnd;
 
 		for(int i=0; i < cChars; ++i){
-			pwLogClust[i] = static_cast<WORD>(rgFirstGlyphOfCluster[i]);
+	  pwLogClust[i] = static_cast<WORD>((psa->fRTL)?rgFirstGlyphOfCluster[i]:rgLastGlyphOfCluster[i]);
 		}
 
 		delete[] rgFirstGlyphOfCluster;
+		delete[] rgLastGlyphOfCluster;
 		return S_OK;
 	}
 	else {
-		WRAP_BEGIN(ScriptShapeOpenType, LPFNSCRIPTSHAPEOPENTYPE)
-		hResult = ScriptShapeOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,cChars,cMaxGlyphs,pwLogClust,pCharProps,pwOutGlyphs,pOutGlyphProps,pcGlyphs);
-		WRAP_END
+//		WRAP_BEGIN(ScriptShapeOpenType, LPFNSCRIPTSHAPEOPENTYPE)
+		HRESULT hResult = ScriptShapeOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,cChars,cMaxGlyphs,pwLogClust,pCharProps,pwOutGlyphs,pOutGlyphProps,pcGlyphs);
+	return hResult;
+//		WRAP_END
 	}
 }
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif

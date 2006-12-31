@@ -1,4 +1,6 @@
-//#include "../stdafx.h"
+// we define this since it is typically only executed once and we need to have
+// some function that we don't forward or we won't get loaded.
+#include "../stdafx.h"
 //static SCRIPT_PROPERTIES **gppScriptProperties;
 //static int giNumScripts;
 //
@@ -6,38 +8,42 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// ScriptGetProperties
-#pragma comment(linker, "/export:ScriptGetProperties=_usp10.ScriptGetProperties")
-//
-//typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETPROPERTIES) (
-//    __deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,        // Out  Receives pointer to table of pointers to properties indexed by script
-//    __out_ecount(1) int                             *piNumScripts); // Out  Receives number of scripts (valid values are 0 through NumScripts-1)
-//
-//#ifdef __cplusplus
-//extern "C" {
-//#endif
-//__checkReturn HRESULT WINAPI GraphiteEnabledScriptGetProperties(
-//    __deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,        // Out  Receives pointer to table of pointers to properties indexed by script
-//    __out_ecount(1) int                             *piNumScripts)  // Out  Receives number of scripts (valid values are 0 through NumScripts-1)
-//{
-//	if(piNumScripts){
-//		*piNumScripts = giNumScripts;
-//	}
-//	if(pppSp){
-//		if(!gppScriptProperties){ // hasn't been initialized yet, initialized first time called
-//			HRESULT hr = InitializeScriptProperties();
-//			if(FAILED(hr)){
-//				return hr;
-//			}
-//		}
-//
-//		*pppSp = const_cast<const SCRIPT_PROPERTIES**>(gppScriptProperties);
-//	}
-//	return S_OK;
-//}
-//#ifdef __cplusplus
-//}
-//#endif
-//
+//#pragma comment(linker, "/export:ScriptGetProperties=_usp10.ScriptGetProperties")
+
+typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETPROPERTIES) (
+	__deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,        // Out  Receives pointer to table of pointers to properties indexed by script
+	__out_ecount(1) int                             *piNumScripts); // Out  Receives number of scripts (valid values are 0 through NumScripts-1)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+__checkReturn HRESULT WINAPI GraphiteEnabledScriptGetProperties(
+	__deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,        // Out  Receives pointer to table of pointers to properties indexed by script
+	__out_ecount(1) int                             *piNumScripts)  // Out  Receives number of scripts (valid values are 0 through NumScripts-1)
+{
+	WRAP_BEGIN(ScriptGetProperties, LPFNSCRIPTGETPROPERTIES)
+	hResult = ScriptGetProperties(pppSp, piNumScripts);
+	WRAP_END
+
+	//if(piNumScripts){
+	//	*piNumScripts = giNumScripts;
+	//}
+	//if(pppSp){
+	//	if(!gppScriptProperties){ // hasn't been initialized yet, initialized first time called
+	//		HRESULT hr = InitializeScriptProperties();
+	//		if(FAILED(hr)){
+	//			return hr;
+	//		}
+	//	}
+
+	//	*pppSp = const_cast<const SCRIPT_PROPERTIES**>(gppScriptProperties);
+	//}
+	//return S_OK;
+}
+#ifdef __cplusplus
+}
+#endif
+
 //SCRIPT_PROPERTIES * GetScriptPropertiesOfEngine(int i){
 //	assert(i > 0 && i < giNumScripts);
 //	if(i > 0 && i < giNumScripts){

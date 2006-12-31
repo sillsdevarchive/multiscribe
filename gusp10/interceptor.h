@@ -1,11 +1,19 @@
-#include "hook.h"
-#include <assert.h>
+#pragma once
+#ifndef  INTERCEPTOR_
+#define  INTERCEPTOR_
 
 #ifdef _WIN64
 #pragma message("64bit not supported")
-#endif
+#else
+
+#include <windows.h>
+#include <stdio.h>
+#include <assert.h>
+
 #pragma warning(push)
-#pragma warning(disable: 4311)
+#pragma warning(disable: 4311) //pointer truncation from 'type' to 'type'
+
+#define JMP_SIZE 5
 
 //license gpl /www.delikon.de
 
@@ -161,170 +169,199 @@ static unsigned char dis2[2359] =//dis engine ww.delikon.de
 	0x3E, 0x89, 0x30, 0x5E, 0xC2, 0x08, 0x00,
 } ;
 
+class Interceptor{
 
-LPVOID mymalloc(UINT size)
-{
-	return VirtualAlloc(NULL,size,MEM_COMMIT,PAGE_READWRITE);
-}
+public:
+	Interceptor(LPCSTR szLibFileName,
+			  LPCSTR szOriginalFunctionName,
+			  LPVOID InterceptingFunctionAddr)
+  {
+	  assert(szLibFileName);
+	  assert(szOriginalFunctionName);
+	assert(InterceptingFunctionAddr);
+	  m_InjectedDllHandle=LoadLibraryA(szLibFileName);
+	  assert(m_InjectedDllHandle);
+	  if(m_InjectedDllHandle)
+	  {
+	  FARPROC pOriginalFunctionAddr = GetProcAddress(m_InjectedDllHandle,
+												 szOriginalFunctionName);
+		  Initialize(m_InjectedDllHandle, pOriginalFunctionAddr, InterceptingFunctionAddr);
+	  if(pOriginalFunctionAddr){
+			InstallInterceptor();
+	  }
+	  }
+  }
 
-Interceptor::Interceptor(LPCSTR szLibFileName, LPCSTR szOriginalFuncName, LPVOID InterceptingFuncAddr)
-{
-	m_InjectedDllHandle=LoadLibraryA(szLibFileName);
-	assert(m_InjectedDllHandle);
-	if(m_InjectedDllHandle)
-	{
-		Initialize(m_InjectedDllHandle, GetProcAddress(m_InjectedDllHandle, szOriginalFuncName), InterceptingFuncAddr);
-#if _DEBUG
-		strncpy(m_OriginalFuncName,szOriginalFuncName,MAX);
-#endif
+	Interceptor(HINSTANCE hLibrary,
+			  LPCSTR szOriginalFunctionName,
+			  LPVOID InterceptingFunctionAddr)
+  {
+	  assert(hLibrary);
+	  assert(szOriginalFunctionName);
+	assert(InterceptingFunctionAddr);
+	  if(hLibrary)
+	  {
+	  FARPROC pOriginalFunctionAddr = GetProcAddress(hLibrary, szOriginalFunctionName);
+		  Initialize(NULL, pOriginalFunctionAddr, InterceptingFunctionAddr);
+	  if(pOriginalFunctionAddr){
+			InstallInterceptor();
+	  }
+	  }
+  }
+
+	Interceptor(LPVOID OriginalFunctionAddr, LPVOID InterceptingFunctionAddr)
+  {
+	  assert(OriginalFunctionAddr);
+	assert(InterceptingFunctionAddr);
+	  Initialize(NULL, OriginalFunctionAddr, InterceptingFunctionAddr);
+	if(OriginalFunctionAddr){
 		InstallInterceptor();
 	}
-}
+  }
 
-Interceptor::Interceptor(HINSTANCE hLibrary, LPCSTR szOriginalFuncName, LPVOID InterceptingFuncAddr)
-{
-	assert(hLibrary);
-	if(hLibrary)
-	{
-		Initialize(NULL, GetProcAddress(hLibrary, szOriginalFuncName), InterceptingFuncAddr);
-#if _DEBUG
-		strncpy(m_OriginalFuncName,szOriginalFuncName,MAX);
-#endif
-		InstallInterceptor();
-	}
-}
+	~Interceptor()
+  {
+	  if(m_isInstalled){
+		  RemoveInterceptor();
+	  }
 
+	  if(m_InjectedDllHandle){
+		  //don't call this from dllmain it isn't safe
+	  //(use constructor that provides handle so it won't get freed automatically)
+		  FreeLibrary(m_InjectedDllHandle);
+	  }
+  }
 
-Interceptor::Interceptor(LPVOID OriginalFuncAddr,LPVOID InterceptingFuncAddr)
-{
-	Initialize(NULL, OriginalFuncAddr, InterceptingFuncAddr);
+	bool IsInstalled()
+  {
+	return m_isInstalled;
+  }
 
-	InstallInterceptor();
-}
-
-void Interceptor::Initialize(HINSTANCE hLibrary, LPVOID OriginalFuncAddr,LPVOID InterceptingFuncAddr)
-{
-	assert(OriginalFuncAddr);
-	assert(InterceptingFuncAddr);
-	m_InjectedDllHandle = hLibrary;
-
-#if _DEBUG
-	memset(m_OriginalFuncName,0,MAX);
-#endif
-
-	m_OriginalFuncAddr=OriginalFuncAddr;
-	m_InterceptingFuncAddr=InterceptingFuncAddr;
-
-	m_isInstalled = false;
-}
-
-Interceptor::~Interceptor()
-{
-	if(m_isInstalled){
-		RemoveInterceptor();
-	}
-
-	if(m_InjectedDllHandle){
-		//don't call this from dllmain it isn't safe (use constructor that provides handle so it won't get freed automatically)
-		FreeLibrary(m_InjectedDllHandle);
-	}
-}
-
-void Interceptor::InstallInterceptor(){
+	void InstallInterceptor()
+  {
 	assert(!m_isInstalled);
-	if(m_isInstalled){
-		return;
-	}
-	if(!m_OriginalFuncAddr || !m_InterceptingFuncAddr) {
-		return;
-	}
+	  if(m_isInstalled){
+		  return;
+	  }
+	  if(!m_OriginalFunctionAddr || !m_InterceptingFunctionAddr) {
+		  return;
+	  }
 
-	BYTE* o=(BYTE*)m_OriginalFuncAddr;
-	DWORD s;
-	m_countBytes=0;
-	BYTE jumpByteCode[JMP_SIZE];
+	  BYTE* o=(BYTE*)m_OriginalFunctionAddr;
+	  DWORD s;
+	  m_countBytes=0;
+	  BYTE jumpByteCode[JMP_SIZE];
 
-	// save enough instructions from original to allow room for a jump
+	  // save enough instructions from original to allow room for a jump
 
-	// we need at least JMP_SIZE bytes for our jump instruction and its address
-	// disassemble the machine code until we have identified more than JMP_SIZE instructions
-	while(m_countBytes<JMP_SIZE){
+	  // we need at least JMP_SIZE bytes for our jump instruction and its address
+	  // disassemble the machine code until we have identified more than JMP_SIZE instructions
+	  while(m_countBytes<JMP_SIZE){
 
-		_asm{
-			lea eax,s
-			push eax
-			push o
-			lea eax,dis2
-			call eax
-		}
+		  _asm{
+			  lea eax,s
+			  push eax
+			  push o
+			  lea eax,dis2
+			  call eax
+		  }
 
-		o+=s;
-		m_countBytes+=s;
-	}
-	// copy these into our original prefix area (along with space for a final jump back instruction)
-	// aka trampoline function
-	m_OriginalFuncByteCodePrefix=(BYTE*)mymalloc(m_countBytes+JMP_SIZE);
+		  o+=s;
+		  m_countBytes+=s;
+	  }
+	  // copy these into our original prefix area (along with space for a final jump back instruction)
+	  // aka trampoline function
+	  m_OriginalFunctionByteCodePrefix=(BYTE*) VirtualAlloc(NULL,m_countBytes+JMP_SIZE,MEM_COMMIT,PAGE_READWRITE);
 
-	DWORD dwOriginalProtection;
-	VirtualProtect(m_OriginalFuncAddr, m_countBytes, PAGE_EXECUTE_READWRITE, &dwOriginalProtection); // unlock
-	memcpy(m_OriginalFuncByteCodePrefix, m_OriginalFuncAddr, m_countBytes);//save bytes
+	  DWORD dwOriginalProtection;
+	  VirtualProtect(m_OriginalFunctionAddr, m_countBytes, PAGE_EXECUTE_READWRITE, &dwOriginalProtection); // unlock
+	  memcpy(m_OriginalFunctionByteCodePrefix, m_OriginalFunctionAddr, m_countBytes);//save bytes
 
-	//overwrite original function with unconditional relative jump to our Interceptor function
-	// aka detour
+	  //overwrite original function with unconditional relative jump to our Interceptor function
+	  // aka detour
 
-	//compute relative jump offset
-	DWORD OffsetFromOriginalToInterceptor = (DWORD)m_InterceptingFuncAddr - (DWORD)m_OriginalFuncAddr - JMP_SIZE;
-	jumpByteCode[0] = 0xe9; //relative 32-bit jmp instruction; address follows
-	jumpByteCode[1] = (BYTE)(OffsetFromOriginalToInterceptor & 0xff);
-	jumpByteCode[2] = (BYTE)((OffsetFromOriginalToInterceptor >> 8) & 0xff);
-	jumpByteCode[3] = (BYTE)((OffsetFromOriginalToInterceptor >> 16) & 0xff);
-	jumpByteCode[4] = (BYTE)((OffsetFromOriginalToInterceptor >> 24) & 0xff);
-	memcpy(m_OriginalFuncAddr,jumpByteCode,JMP_SIZE);
+	  //compute relative jump offset
+	  DWORD OffsetFromOriginalToInterceptor = (DWORD)m_InterceptingFunctionAddr - (DWORD)m_OriginalFunctionAddr - JMP_SIZE;
+	  jumpByteCode[0] = 0xe9; //relative 32-bit jmp instruction; address follows
+	  jumpByteCode[1] = (BYTE)(OffsetFromOriginalToInterceptor & 0xff);
+	  jumpByteCode[2] = (BYTE)((OffsetFromOriginalToInterceptor >> 8) & 0xff);
+	  jumpByteCode[3] = (BYTE)((OffsetFromOriginalToInterceptor >> 16) & 0xff);
+	  jumpByteCode[4] = (BYTE)((OffsetFromOriginalToInterceptor >> 24) & 0xff);
+	  memcpy(m_OriginalFunctionAddr,jumpByteCode,JMP_SIZE);
 
-	//pad with noop 0x90
-	if(m_countBytes>JMP_SIZE){
-		memset((BYTE*)m_OriginalFuncAddr+JMP_SIZE,0x90,m_countBytes-JMP_SIZE);
-	}
+	  //pad with noop 0x90
+	  if(m_countBytes>JMP_SIZE){
+		  memset((BYTE*)m_OriginalFunctionAddr+JMP_SIZE,0x90,m_countBytes-JMP_SIZE);
+	  }
 
-	VirtualProtect(m_OriginalFuncAddr, m_countBytes, dwOriginalProtection, &dwOriginalProtection);	//restore lock
+	  VirtualProtect(m_OriginalFunctionAddr, m_countBytes, dwOriginalProtection, &dwOriginalProtection);	//restore lock
 
-	// Add the final jump back instruction to original prefix area
-	// (since we moved the beginning of the original method, this allows it to continue
-	// with the rest of the function as though it had never been moved.
+	  // Add the final jump back instruction to original prefix area
+	  // (since we moved the beginning of the original method, this allows it to continue
+	  // with the rest of the function as though it had never been moved.
 
-	DWORD OffsetFromPrefixToOriginal = (DWORD)m_OriginalFuncAddr - (DWORD)m_OriginalFuncByteCodePrefix - JMP_SIZE;
-	jumpByteCode[0] = 0xe9; //relative 32-bit jmp instruction; address follows
-	jumpByteCode[1] = (BYTE)(OffsetFromPrefixToOriginal & 0xff);
-	jumpByteCode[2] = (BYTE)((OffsetFromPrefixToOriginal >> 8) & 0xff);
-	jumpByteCode[3] = (BYTE)((OffsetFromPrefixToOriginal >> 16) & 0xff);
-	jumpByteCode[4] = (BYTE)((OffsetFromPrefixToOriginal >> 24) & 0xff);
-	memcpy(m_OriginalFuncByteCodePrefix+m_countBytes,jumpByteCode,JMP_SIZE);//overwrite with jump
+	  DWORD OffsetFromPrefixToOriginal = (DWORD)m_OriginalFunctionAddr - (DWORD)m_OriginalFunctionByteCodePrefix - JMP_SIZE;
+	  jumpByteCode[0] = 0xe9; //relative 32-bit jmp instruction; address follows
+	  jumpByteCode[1] = (BYTE)(OffsetFromPrefixToOriginal & 0xff);
+	  jumpByteCode[2] = (BYTE)((OffsetFromPrefixToOriginal >> 8) & 0xff);
+	  jumpByteCode[3] = (BYTE)((OffsetFromPrefixToOriginal >> 16) & 0xff);
+	  jumpByteCode[4] = (BYTE)((OffsetFromPrefixToOriginal >> 24) & 0xff);
+	  memcpy(m_OriginalFunctionByteCodePrefix+m_countBytes,jumpByteCode,JMP_SIZE);//overwrite with jump
 
-	m_isInstalled = true;
-}
+	  m_isInstalled = true;
+  }
+
+	void RemoveInterceptor()
+  {
+	  assert(m_isInstalled);
+	  if(!m_isInstalled){
+		  return;
+	  }
+
+	  DWORD dwOriginalProtection;
+	  VirtualProtect(m_OriginalFunctionAddr, m_countBytes, PAGE_EXECUTE_READWRITE, &dwOriginalProtection); // unlock
+	  memcpy(m_OriginalFunctionAddr,m_OriginalFunctionByteCodePrefix,m_countBytes);//restore bytes
+	  VirtualProtect(m_OriginalFunctionAddr, m_countBytes, dwOriginalProtection, &dwOriginalProtection);	//lock
+	  VirtualFree(m_OriginalFunctionByteCodePrefix, m_countBytes+JMP_SIZE, MEM_DECOMMIT);
+	  m_OriginalFunctionByteCodePrefix = NULL;
+	  m_isInstalled = false;
+  }
+
+	LPVOID GetInterceptor()
+  {
+	  return m_InterceptingFunctionAddr;
+  }
+
+	LPVOID GetOriginal()
+  {
+	  return (m_isInstalled) ?  m_OriginalFunctionByteCodePrefix : m_OriginalFunctionAddr;
+  }
 
 
-LPVOID Interceptor::GetOriginal(){
-	return (m_isInstalled) ?  m_OriginalFuncByteCodePrefix : m_OriginalFuncAddr;
-}
+private:
+	void Initialize(HINSTANCE hLibrary,
+				  LPVOID OriginalFunctionAddr,
+				  LPVOID InterceptingFunctionAddr)
+  {
+	  m_InjectedDllHandle = hLibrary;
 
-LPVOID Interceptor::GetInterceptor(){
-	return m_InterceptingFuncAddr;
-}
+	  m_OriginalFunctionAddr=OriginalFunctionAddr;
+	  m_InterceptingFunctionAddr=InterceptingFunctionAddr;
 
-void Interceptor::RemoveInterceptor(){
-	assert(m_isInstalled);
-	if(!m_isInstalled){
-		return;
-	}
+	  m_isInstalled = false;
+  }
 
-	DWORD dwOriginalProtection;
-	VirtualProtect(m_OriginalFuncAddr, m_countBytes, PAGE_EXECUTE_READWRITE, &dwOriginalProtection); // unlock
-	memcpy(m_OriginalFuncAddr,m_OriginalFuncByteCodePrefix,m_countBytes);//restore bytes
-	VirtualProtect(m_OriginalFuncAddr, m_countBytes, dwOriginalProtection, &dwOriginalProtection);	//lock
-	VirtualFree(m_OriginalFuncByteCodePrefix, m_countBytes+JMP_SIZE, MEM_DECOMMIT);
-	m_OriginalFuncByteCodePrefix = NULL;
-	m_isInstalled = false;
-}
+	bool m_isInstalled;
 
+	LPVOID m_OriginalFunctionAddr;
+	LPVOID m_InterceptingFunctionAddr;
+
+	BYTE* m_OriginalFunctionByteCodePrefix;
+
+	HINSTANCE m_InjectedDllHandle;
+
+	int m_countBytes;
+};
 #pragma warning(pop)
+#endif // _WIN64
+#endif // INTERCEPTOR_

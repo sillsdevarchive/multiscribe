@@ -1,11 +1,3 @@
 LIBRARY	usp10.dll
 EXPORTS
-;	ScriptGetProperties=GraphiteEnabledScriptGetProperties
-;	ScriptIsComplex=GraphiteEnabledScriptIsComplex
-
-
-	ScriptPlaceOpenType=GraphiteEnabledScriptPlaceOpenType
-	ScriptShapeOpenType=GraphiteEnabledScriptShapeOpenType
-
-;	ScriptPlace=GraphiteEnabledScriptPlace
-;	ScriptShape=GraphiteEnabledScriptShape
+	ScriptGetProperties=GraphiteEnabledScriptGetProperties

@@ -48,6 +48,30 @@
 #include <WinSegmentPainter.h>
 #include <ITextSource.h>
 
+#if USPBUILD <= 0400
+typedef ULONG OPENTYPE_TAG;
+
+typedef struct opentype_feature_record{
+  OPENTYPE_TAG  tagFeature;
+  LONG  lParameter;
+} OPENTYPE_FEATURE_RECORD;
+
+typedef struct textrange_properties{
+	OPENTYPE_FEATURE_RECORD*   potfRecords;
+	int cotfRecords;
+} TEXTRANGE_PROPERTIES;
+
+typedef struct script_charprop{
+	WORD           fCanGlyphAlone : 1;
+	WORD           reserved       : 15;
+} SCRIPT_CHARPROP;
+
+typedef struct script_glyphprop {
+	SCRIPT_VISATTR sva;
+	WORD reserved;
+} SCRIPT_GLYPHPROP;
+#endif
+
 bool IsGraphiteFont(HDC hdc);
 
 

@@ -4,9 +4,11 @@
 #include <math.h>
 #include "../stdafx.h"
 #include "../GlyphsToTextSourceMap.h"
-#include "../hook.h"
+
 LPVOID GetOriginalScriptPlace();
 
+// ScriptPlace may be called twice for every ScriptShape but with a different device context
+// (screen verses printer).
 
 /////   ScriptPlace
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTPLACE)(
@@ -35,21 +37,29 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 	__out_ecount_full_opt(cGlyphs) GOFFSET      *pGoffset,  // Out   x,y offset for combining glyph
 	__out_ecount(1) ABC                         *pABC)      // Out   Composite ABC for the whole run (Optional)
 {
-	//if(!hdc){
-	//	return E_PENDING;
-	//}
+	if(!hdc && !*psc){
+		return E_PENDING;
+	}
 	LPFNSCRIPTPLACE ScriptPlace = (LPFNSCRIPTPLACE) GetOriginalScriptPlace();
+	if(!*psc)
+	{
+		//WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
+		// only to setup the cache correctly:
+		HRESULT hResult = ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
+	if( FAILED(hResult)){
+	  return hResult;
+	}
+	FreeGlyphPositionsForSession(*psc);
+//	WRAP_END_NO_RETURN
+	}
+
 	GlyphPositions * pGlyphPositions = GetGlyphPositions(*psc, psa);
+  if(pGlyphPositions && pGlyphPositions->advanceWidths.size() != static_cast<size_t>(cGlyphs)){
+	  __asm { int 3} // debug break
+  }
+
 	if(pGlyphPositions &&  pGlyphPositions->advanceWidths.size() == static_cast<size_t>(cGlyphs))
 	{
-		//if(!psc)
-		//{
-		//	WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
-		//	// only to setup the cache correctly:
-		//	hResult = ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
-		//	WRAP_END_NO_RETURN
-		//}
-
 		for(int i = 0; i < cGlyphs; ++i){
 			piAdvance[i] = pGlyphPositions->advanceWidths[i];
 			pGoffset[i].du = pGlyphPositions->goffsets[i].du;
