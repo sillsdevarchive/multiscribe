@@ -146,8 +146,6 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 			pABC->abcB = static_cast<UINT>(ceil(seg.advanceWidth())); // drawn portion
 			pABC->abcC = 0; // space to add to trailing edge (may be negative)
 		}
-	psa->eScript = SCRIPT_UNDEFINED; // it seems that the script engine's text out may be trying to do special things especially in the case of arabic
-
 		return S_OK;
 	}
 	else {

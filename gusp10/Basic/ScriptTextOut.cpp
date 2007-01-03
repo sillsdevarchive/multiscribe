@@ -1,10 +1,7 @@
-#ifndef COLORIZED
 #pragma comment(linker, "/export:ScriptTextOut=_usp10.ScriptTextOut")
 
-#else
-#pragma comment(linker, "/export:ScriptTextOut=GraphiteEnabledScriptTextOut")
-
 #include "../stdafx.h"
+LPVOID GetOriginalScriptTextOut();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// ScriptTextOut
@@ -24,9 +21,9 @@ typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTTEXTOUT) (
 	__in_ecount_opt(cGlyphs) const int      *piJustify,     // In     Justified advance widths (optional)
 	__in_ecount(cGlyphs) const GOFFSET      *pGoffset);     // In     x,y offset for combining glyph
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptTextOut(
 	const HDC                               hdc,            // In     OS handle to device context (required)
@@ -44,27 +41,41 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptTextOut(
 	__in_ecount_opt(cGlyphs) const int      *piJustify,     // In     Justified advance widths (optional)
 	__in_ecount(cGlyphs) const GOFFSET      *pGoffset)     // In     x,y offset for combining glyph
 {
-	WRAP_BEGIN(ScriptTextOut, LPFNSCRIPTTEXTOUT)
+//	WRAP_BEGIN(ScriptTextOut, LPFNSCRIPTTEXTOUT)
 
+  LPFNSCRIPTTEXTOUT ScriptTextOut = (LPFNSCRIPTTEXTOUT) GetOriginalScriptTextOut();
+//#define COLORIZED
+
+#if defined(COLORIZED)
 	COLORREF OriginalColor;
+#endif
+
 	if(IsGraphiteFont(hdc))
 	{
+	const_cast<SCRIPT_ANALYSIS *>(psa)->eScript = SCRIPT_UNDEFINED; // it seems that the script engine's text out may be trying to do special things especially in the case of arabic
+
+#if defined(COLORIZED)
 		OriginalColor = SetTextColor(hdc, RGB(0,128,0));
-	}
+#endif
+  }
+#if defined(COLORIZED)
 	else
 	{
 		OriginalColor = SetTextColor(hdc, RGB(0,255,0));
 	}
-
-
-	hResult = ScriptTextOut(hdc,psc,x,y,fuOptions,lprc,psa,pwcReserved,iReserved,pwGlyphs,cGlyphs,piAdvance,piJustify,pGoffset);
-
-	SetTextColor(hdc, OriginalColor);
-	WRAP_END
-}
-#ifdef __cplusplus
-}
 #endif
 
+HRESULT	hResult = ScriptTextOut(hdc,psc,x,y,fuOptions,lprc,psa,pwcReserved,iReserved,pwGlyphs,cGlyphs,piAdvance,piJustify,pGoffset);
 
-#endif COLORIZED
+#if defined(COLORIZED)
+	SetTextColor(hdc, OriginalColor);
+#endif
+
+  return hResult;
+//	WRAP_END
+}
+//#ifdef __cplusplus
+//}
+//#endif
+
+

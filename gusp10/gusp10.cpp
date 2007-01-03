@@ -83,6 +83,23 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 	__out_ecount_full(cGlyphs) GOFFSET                *pGoffset,       // Out   x,y offset for combining glyph
 	__out_opt                  ABC                    *pABC);          // Out   Composite ABC for the whole run (Optional)
 
+__checkReturn HRESULT WINAPI GraphiteEnabledScriptTextOut(
+	const HDC                               hdc,            // In     OS handle to device context (required)
+	__deref_inout_ecount(1) SCRIPT_CACHE    *psc,           // InOut  Cache handle
+	int                                     x,              // In     x,y position for first glyph
+	int                                     y,              // In
+	UINT                                    fuOptions,      // In     ExtTextOut options
+	__in_ecount_opt(1) const RECT           *lprc,          // In     optional clipping/opaquing rectangle
+	__in_ecount(1) const SCRIPT_ANALYSIS    *psa,           // In     Result of ScriptItemize
+	__reserved const WCHAR                  *pwcReserved,   // In     Reserved (requires NULL)
+	__reserved int                          iReserved,      // In     Reserved (requires 0)
+	__in_ecount(cGlyphs) const WORD         *pwGlyphs,      // In     Glyph buffer from prior ScriptShape call
+	int                                     cGlyphs,        // In     Number of glyphs
+	__in_ecount(cGlyphs) const int          *piAdvance,     // In     Advance widths from ScriptPlace
+	__in_ecount_opt(cGlyphs) const int      *piJustify,     // In     Justified advance widths (optional)
+	__in_ecount(cGlyphs) const GOFFSET      *pGoffset);     // In     x,y offset for combining glyph
+
+
 //void FreeScriptProperties();
 
 //static GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP * gpGraphiteScriptStringAnalysisMap;
@@ -93,6 +110,7 @@ static Interceptor * gpScriptShapeOpenTypeInterceptor;
 static Interceptor * gpScriptPlaceOpenTypeInterceptor;
 static Interceptor * gpScriptIsComplexInterceptor;
 static Interceptor * gpScriptFreeCacheInterceptor;
+static Interceptor * gpScriptTextOutInterceptor;
 
 static HINSTANCE ghUSP10DLL;
 
@@ -124,6 +142,11 @@ LPVOID GetOriginalScriptIsComplex()
 LPVOID GetOriginalScriptFreeCache()
 {
 	return gpScriptFreeCacheInterceptor->GetOriginal();
+}
+
+LPVOID GetOriginalScriptTextOut()
+{
+  return gpScriptTextOutInterceptor->GetOriginal();
 }
 
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETPROPERTIES) (
@@ -195,6 +218,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			gpScriptShapeOpenTypeInterceptor = new Interceptor(ghUSP10DLL, "ScriptShapeOpenType", &GraphiteEnabledScriptShapeOpenType);
 			gpScriptIsComplexInterceptor = new Interceptor(ghUSP10DLL, "ScriptIsComplex", &GraphiteEnabledScriptIsComplex);
 			gpScriptFreeCacheInterceptor = new Interceptor(ghUSP10DLL, "ScriptFreeCache", &GraphiteEnabledScriptFreeCache);
+	  gpScriptTextOutInterceptor = new Interceptor(ghUSP10DLL, "ScriptTextOut", &GraphiteEnabledScriptTextOut);
 			break;
 		case DLL_PROCESS_DETACH:
 //			delete gpGraphiteScriptStringAnalysisMap;
@@ -206,6 +230,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			delete gpScriptShapeOpenTypeInterceptor;
 			delete gpScriptIsComplexInterceptor;
 			delete gpScriptFreeCacheInterceptor;
+	  delete gpScriptTextOutInterceptor;
 			break;
 		case DLL_THREAD_ATTACH:
 			break;
@@ -281,12 +306,32 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
 //static GLYPHS_TO_TEXTSOURCE_MAP * gpGlyphsToTextSourceMap;
 
+static TextSource gLastTextSourceCache;
+static GlyphPositions gLastGlyphPositionsCache;
+
+TextSource & GetLastScriptShapeTextSource(){
+  return gLastTextSourceCache;
+}
+
+void SetLastScriptShapeTextSource(TextSource &textSource){
+  gLastTextSourceCache = textSource;
+}
+
+std::basic_string<WORD>&
+GetLastScriptShapeGlyphs() {
+  return gLastGlyphPositionsCache.glyphs;
+}
+
 GlyphPositions *
-GetGlyphPositions(LPVOID pSessionKey, LPVOID pKey){
+GetGlyphPositions(LPVOID pSessionKey, LPVOID pKey,
+				  const WORD * pGlyphs, int cGlyphs)
+{
 	assert(pSessionKey);
 	assert(pKey);
 	assert(gpGlyphPositions);
-	if(!pSessionKey || !pKey || !gpGlyphPositions){
+  assert(pGlyphs);
+
+	if(!pSessionKey || !pKey || !gpGlyphPositions || !pGlyphs){
 		return NULL;
 	}
 
@@ -297,20 +342,32 @@ GetGlyphPositions(LPVOID pSessionKey, LPVOID pKey){
 	if(it == glyphPositionsMap.end()){
 		return NULL;
 	}
-	GlyphPositions* pTextSource = &it->second;
-	return pTextSource;
+
+  if(static_cast<int>(it->second.glyphs.size()) == cGlyphs &&
+	std::equal(it->second.glyphs.begin(),
+				it->second.glyphs.end(),
+				pGlyphs)){
+	  GlyphPositions* pTextSource = &it->second;
+	  return pTextSource;
+  }
+
+  // old cache
+  glyphPositionsMap.erase(it);
+  return NULL;
 }
 
-GlyphPositions *
-CreateGlyphPositions(LPVOID pSessionKey, LPVOID pKey, int size){
+void
+SetGlyphPositions(LPVOID pSessionKey, LPVOID pKey, GlyphPositions & glyphPositions)
+{
 	assert(pSessionKey);
 	assert(pKey);
 	assert(gpGlyphPositions);
+	if(!pSessionKey || !pKey || !gpGlyphPositions){
+		return;
+	}
 
-	GlyphPositions & glyphPositions = (*gpGlyphPositions)[pSessionKey][pKey];
-	glyphPositions.advanceWidths.resize(size);
-	glyphPositions.goffsets.resize(size);
-	return &glyphPositions;
+	(*gpGlyphPositions)[pSessionKey][pKey] = glyphPositions;
+  gLastGlyphPositionsCache = glyphPositions;
 }
 
 void FreeGlyphPositionsForSession(LPVOID pSessionKey)

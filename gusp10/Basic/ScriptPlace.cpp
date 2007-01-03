@@ -4,6 +4,7 @@
 #include <math.h>
 #include "../stdafx.h"
 #include "../GlyphsToTextSourceMap.h"
+#include "../TextSource.h"
 
 LPVOID GetOriginalScriptPlace();
 
@@ -41,24 +42,111 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 		return E_PENDING;
 	}
 	LPFNSCRIPTPLACE ScriptPlace = (LPFNSCRIPTPLACE) GetOriginalScriptPlace();
-	if(!*psc)
-	{
-		//WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
-		// only to setup the cache correctly:
-		HRESULT hResult = ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
-	if( FAILED(hResult)){
-	  return hResult;
-	}
-	FreeGlyphPositionsForSession(*psc);
-//	WRAP_END_NO_RETURN
-	}
+//	if(!*psc)
+//	{
+//		//WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
+//		// only to setup the cache correctly:
+//		HRESULT hResult = ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
+//    if( FAILED(hResult)){
+//      return hResult;
+//    }
+//    FreeGlyphPositionsForSession(*psc);
+////	WRAP_END_NO_RETURN
+//	}
 
-	GlyphPositions * pGlyphPositions = GetGlyphPositions(*psc, psa);
-  if(pGlyphPositions && pGlyphPositions->advanceWidths.size() != static_cast<size_t>(cGlyphs)){
-	  __asm { int 3} // debug break
+	GlyphPositions * pGlyphPositions = NULL;
+  if(*psc){
+	pGlyphPositions = GetGlyphPositions(*psc, psa, pwGlyphs, cGlyphs);
+  }
+  if(!pGlyphPositions){
+	// maybe it couldn't find it because a different hdc/psc was used from the ScriptShape
+	// if that's the case lets see if the glyphs we've been given were the same as came out
+	// of the last ScriptShape call
+
+	if(cGlyphs == static_cast<int>(GetLastScriptShapeGlyphs().size()) &&
+		std::equal(GetLastScriptShapeGlyphs().begin(),
+				   GetLastScriptShapeGlyphs().end(),
+				   pwGlyphs)){
+		if(!hdc){
+			return E_PENDING;
+		}
+	  if(IsGraphiteFont(hdc)){
+
+		  TextSource textSource(GetLastScriptShapeTextSource());
+
+			// Create the Graphite font object.
+			gr::WinFont font(hdc);
+
+			// Create the segment.
+			gr::LayoutEnvironment layout;	// use all the defaults...
+			layout.setDumbFallback(true);	// except that we want it to try its best, no matter what
+			gr::RangeSegment seg(&font, &textSource, &layout);
+
+			std::pair<gr::GlyphIterator, gr::GlyphIterator> prGlyphIterators = seg.glyphs();
+
+			float xClusterEnd = 0.0;
+			int i = 0;
+			for(gr::GlyphIterator it = prGlyphIterators.first;
+								  it != prGlyphIterators.second;
+								  ++it, ++i){
+		  if(it->isAttached()){
+			float xOrigin = it->origin();
+			if(textSource.getRightToLeft(0)){
+			  assert (xOrigin <= 0);
+			  xOrigin *= -1;
+			}
+
+					//The advance width' of a glyph is the movement in the
+					//direction of writing from the starting point for rendering
+					//that glyph to the starting point for rendering the next glyph.
+					//
+					//The origin of each subsequent glyph is offset from that of the
+					//previous glyph by the advance values of the previous glyph.
+					//
+					if(it == it->attachedClusterBase()){
+			  float advance = it->attachedClusterAdvance();
+			  assert(advance > 0);
+
+						//Base glyphs generally have a non-zero advance width
+						//and generally have a glyph offset of (0, 0).
+						piAdvance[i] = static_cast<int>(ceil(advance));   // x offset for combining glyph
+
+			  xClusterEnd = xOrigin;
+			  if(!textSource.getRightToLeft(0)){
+				xClusterEnd += advance;
+			  }
+						pGoffset[i].du = 0;
+					}
+					else {
+						//Combining glyphs generally have a zero advance width and
+						//generally have an offset that places them correctly in
+						//relation to the nearest preceding base glyph.
+						piAdvance[i] = 0;
+				  pGoffset[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
+					}
+				}
+				else {
+					piAdvance[i] = static_cast<int>(ceil(it->advanceWidth()));// should be rounded
+					pGoffset[i].du = 0;
+				}
+				pGoffset[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
+			}
+
+		  if(pABC){
+			  //TODO: really the segment should have public properties for
+			  // members, m_dxsLeftOverhang, m_dxsRightOverhang and m_dxsVisibleWidth
+			  gr::Rect boundingRect = seg.boundingRect();
+				pABC->abcA = static_cast<int>(ceil(boundingRect.left)); // space to leading edge (may be negative)
+				pABC->abcB = static_cast<UINT>(ceil(seg.advanceWidth())); // drawn portion
+				pABC->abcC = 0; // space to add to trailing edge (may be negative)
+			}
+
+			return S_OK;
+	  }
+	}
   }
 
-	if(pGlyphPositions &&  pGlyphPositions->advanceWidths.size() == static_cast<size_t>(cGlyphs))
+	if(pGlyphPositions)
 	{
 		for(int i = 0; i < cGlyphs; ++i){
 			piAdvance[i] = pGlyphPositions->advanceWidths[i];
