@@ -100,7 +100,6 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 								 rgIsClusterStart, rgIsClusterEnd, cGlyphs, &cgidX);
 
 		float xClusterEnd = 0.0;
-		float yBase = 0.0;
 		int i = 0;
 		for(gr::GlyphIterator it = prGlyphIterators.first;
 							  it != prGlyphIterators.second;
@@ -108,17 +107,17 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 
 			glyphPositions.glyphs[i] = pwOutGlyphs[i] = it->glyphID();
 
-			psva[i].fClusterStart = (psa->fRTL)?rgIsClusterStart[i]: rgIsClusterEnd[i];
+			psva[i].fClusterStart = (psa->fRTL)?rgIsClusterEnd[i]: rgIsClusterStart[i];
 			psva[i].fDiacritic = (psva[i].fClusterStart)?false:it->isAttached();
 			psva[i].fZeroWidth = false; // TODO: when does this need to be set?
 			psva[i].uJustification = SCRIPT_JUSTIFY_NONE; //TODO: when does this need to change
 
 			float xOrigin = it->origin();
+			if(psa->fRTL){
+				assert (xOrigin <= 0);
+				xOrigin *= -1;
+			}
 			if(it->isAttached()){
-				if(psa->fRTL){
-					assert (xOrigin <= 0);
-					xOrigin *= -1;
-				}
 
 				//The advance width' of a glyph is the movement in the
 				//direction of writing from the starting point for rendering
@@ -128,42 +127,45 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 				//previous glyph by the advance values of the previous glyph.
 				//
 				if(it == it->attachedClusterBase()){
-					yBase = 0.0;
-
 					float advance = it->attachedClusterAdvance();
-					assert(advance > 0);
+					assert(advance >= 0);
 
-					//Base glyphs generally have a non-zero advance width
+		  //Base glyphs generally have a non-zero advance width
 					//and generally have a glyph offset of (0, 0).
 					glyphPositions.advanceWidths[i] = static_cast<int>(ceil(advance));   // x offset for combining glyph
 
-					glyphPositions.goffsets[i].du = static_cast<int>(floor(xClusterEnd - xOrigin));
-					xClusterEnd = xOrigin;
-					if(!psa->fRTL){
+					if(psa->fRTL){
+			glyphPositions.goffsets[i].du = 0;
+						xClusterEnd = xOrigin;
+		  }
+		  else {
+			glyphPositions.goffsets[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
 						xClusterEnd += advance;
-					}
+		  }
 				}
 				else {
 					//Combining glyphs generally have a zero advance width and
 					//generally have an offset that places them correctly in
 					//relation to the nearest preceding base glyph.
 					glyphPositions.advanceWidths[i] = 0;
-					glyphPositions.goffsets[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
+				glyphPositions.goffsets[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
 				}
-				glyphPositions.goffsets[i].dv = static_cast<LONG>(ceil(it->yOffset() - yBase));  // y offset
-//				yBase = it->yOffset();
 			}
 			else {
 				float advance = it->advanceWidth();
 				glyphPositions.advanceWidths[i] = static_cast<int>(ceil(advance));// should be rounded
+				if(psa->fRTL){
 				glyphPositions.goffsets[i].du = 0;
-				glyphPositions.goffsets[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
+		}
+		else {
+		  glyphPositions.goffsets[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
+		}
 				xClusterEnd = xOrigin;
 				if(!psa->fRTL){
 					xClusterEnd += advance;
 				}
-
 			}
+		glyphPositions.goffsets[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
 		}
 
 		delete[] rgIsClusterStart;

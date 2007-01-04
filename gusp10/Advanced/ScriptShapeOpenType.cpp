@@ -111,7 +111,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShapeOpenType(
 
 		for(int i=0; i != *pcGlyphs; ++i){
 		  pwOutGlyphs[i] = rgGlyphInfo[i].glyphID();
-		  pOutGlyphProps[i].sva.fClusterStart = (psa->fRTL)?rgIsClusterStart[i]: rgIsClusterEnd[i];
+		  pOutGlyphProps[i].sva.fClusterStart = (psa->fRTL)?rgIsClusterEnd[i]: rgIsClusterStart[i];
 		  pOutGlyphProps[i].sva.fDiacritic = (pOutGlyphProps[i].sva.fClusterStart)?false:rgGlyphInfo[i].isAttached(); // VERIFY
 		  pOutGlyphProps[i].sva.fZeroWidth = false; // TODO: when does this need to be set?
 		  pOutGlyphProps[i].sva.uJustification = SCRIPT_JUSTIFY_NONE; //TODO: when does this need to change
@@ -121,7 +121,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShapeOpenType(
 		delete[] rgIsClusterEnd;
 
 		for(int i=0; i < cChars; ++i){
-	  pwLogClust[i] = static_cast<WORD>((psa->fRTL)?rgFirstGlyphOfCluster[i]:rgLastGlyphOfCluster[i]);
+	  pwLogClust[i] = static_cast<WORD>((psa->fRTL)?rgLastGlyphOfCluster[i]:rgFirstGlyphOfCluster[i]);
 		}
 
 		delete[] rgFirstGlyphOfCluster;

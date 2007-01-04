@@ -89,12 +89,12 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 			for(gr::GlyphIterator it = prGlyphIterators.first;
 								  it != prGlyphIterators.second;
 								  ++it, ++i){
+		  float xOrigin = it->origin();
+		  if(textSource.getRightToLeft(0)){
+			assert (xOrigin <= 0);
+			xOrigin *= -1;
+		  }
 		  if(it->isAttached()){
-			float xOrigin = it->origin();
-			if(textSource.getRightToLeft(0)){
-			  assert (xOrigin <= 0);
-			  xOrigin *= -1;
-			}
 
 					//The advance width' of a glyph is the movement in the
 					//direction of writing from the starting point for rendering
@@ -105,17 +105,19 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 					//
 					if(it == it->attachedClusterBase()){
 			  float advance = it->attachedClusterAdvance();
-			  assert(advance > 0);
+			  assert(advance >= 0);
 
 						//Base glyphs generally have a non-zero advance width
 						//and generally have a glyph offset of (0, 0).
 						piAdvance[i] = static_cast<int>(ceil(advance));   // x offset for combining glyph
-
-			  xClusterEnd = xOrigin;
-			  if(!textSource.getRightToLeft(0)){
+					if(textSource.getRightToLeft(0)){
+				pGoffset[i].du = 0;
+				xClusterEnd = xOrigin;
+			  }
+			  else {
+				pGoffset[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
 				xClusterEnd += advance;
 			  }
-						pGoffset[i].du = 0;
 					}
 					else {
 						//Combining glyphs generally have a zero advance width and
@@ -126,8 +128,18 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 					}
 				}
 				else {
-					piAdvance[i] = static_cast<int>(ceil(it->advanceWidth()));// should be rounded
-					pGoffset[i].du = 0;
+					float advance = it->advanceWidth();
+					piAdvance[i] = static_cast<int>(ceil(advance));// should be rounded
+			if(textSource.getRightToLeft(0)){
+					  pGoffset[i].du = 0;
+			}
+			else {
+					  pGoffset[i].du = static_cast<int>(floor(xOrigin - xClusterEnd)); // allow for kerning
+			}
+					xClusterEnd = xOrigin;
+					if(textSource.getRightToLeft(0)){
+						xClusterEnd += advance;
+					}
 				}
 				pGoffset[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
 			}
