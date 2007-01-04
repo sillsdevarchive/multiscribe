@@ -5,8 +5,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gusp10", "gusp10\gusp10.vcp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LoggingUsp10", "LoggingUsp10\LoggingUsp10.vcproj", "{2CBA3568-FC5A-4EF7-AD3F-CB4F38738B0B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "multiscribe", "multiscribe\multiscribe.vcproj", "{94217736-B565-4579-BD9A-09AA7673622F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -21,10 +19,6 @@ Global
 		{2CBA3568-FC5A-4EF7-AD3F-CB4F38738B0B}.Debug|Win32.Build.0 = Debug|Win32
 		{2CBA3568-FC5A-4EF7-AD3F-CB4F38738B0B}.Release|Win32.ActiveCfg = Release|Win32
 		{2CBA3568-FC5A-4EF7-AD3F-CB4F38738B0B}.Release|Win32.Build.0 = Release|Win32
-		{94217736-B565-4579-BD9A-09AA7673622F}.Debug|Win32.ActiveCfg = Debug|Win32
-		{94217736-B565-4579-BD9A-09AA7673622F}.Debug|Win32.Build.0 = Debug|Win32
-		{94217736-B565-4579-BD9A-09AA7673622F}.Release|Win32.ActiveCfg = Release|Win32
-		{94217736-B565-4579-BD9A-09AA7673622F}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

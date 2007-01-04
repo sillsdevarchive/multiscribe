@@ -48,15 +48,15 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 		if(!*psc)
 		{
 			HRESULT hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
-	  if( FAILED(hResult) && hResult != USP_E_SCRIPT_NOT_IN_FONT){
-		return hResult;
-	  }
-	  FreeGlyphPositionsForSession(*psc);
+			if( FAILED(hResult) && hResult != USP_E_SCRIPT_NOT_IN_FONT){
+				return hResult;
+			}
+			FreeGlyphPositionsForSession(*psc);
 		}
 
-	if(psa->fRTL){
-	  assert(psa->fLogicalOrder); // no support yet for visual order
-	}
+		if(psa->fRTL){
+		  assert(psa->fLogicalOrder); // no support yet for visual order
+		}
 		TextSource textSource(pwcChars, cChars);
 		textSource.setRightToLeft(psa->fRTL);
 
@@ -70,7 +70,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 
 		std::pair<gr::GlyphIterator, gr::GlyphIterator> prGlyphIterators = seg.glyphs();
 
-	int cGlyphs = 0;
+		int cGlyphs = 0;
 		for(gr::GlyphIterator it = prGlyphIterators.first;
 							  it != prGlyphIterators.second;
 							  ++it){
@@ -85,11 +85,11 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 		*pcGlyphs = cGlyphs;
 
 		GlyphPositions glyphPositions;
-	glyphPositions.advanceWidths.resize(cGlyphs);
-	glyphPositions.glyphs.resize(cGlyphs);
-	glyphPositions.goffsets.resize(cGlyphs);
+		glyphPositions.advanceWidths.resize(cGlyphs);
+		glyphPositions.glyphs.resize(cGlyphs);
+		glyphPositions.goffsets.resize(cGlyphs);
 
-	SetLastScriptShapeTextSource(textSource);
+		SetLastScriptShapeTextSource(textSource);
 
 		int * rgFirstGlyphOfCluster = new int [cChars];
 		int * rgLastGlyphOfCluster = new int [cChars];
@@ -100,7 +100,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 								 rgIsClusterStart, rgIsClusterEnd, cGlyphs, &cgidX);
 
 		float xClusterEnd = 0.0;
-	float yBase = 0.0;
+		float yBase = 0.0;
 		int i = 0;
 		for(gr::GlyphIterator it = prGlyphIterators.first;
 							  it != prGlyphIterators.second;
@@ -108,17 +108,17 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 
 			glyphPositions.glyphs[i] = pwOutGlyphs[i] = it->glyphID();
 
-	  psva[i].fClusterStart = (psa->fRTL)?rgIsClusterStart[i]: rgIsClusterEnd[i];
-		  psva[i].fDiacritic = (psva[i].fClusterStart)?false:it->isAttached();
+			psva[i].fClusterStart = (psa->fRTL)?rgIsClusterStart[i]: rgIsClusterEnd[i];
+			psva[i].fDiacritic = (psva[i].fClusterStart)?false:it->isAttached();
 			psva[i].fZeroWidth = false; // TODO: when does this need to be set?
 			psva[i].uJustification = SCRIPT_JUSTIFY_NONE; //TODO: when does this need to change
 
+			float xOrigin = it->origin();
 			if(it->isAttached()){
-		float xOrigin = it->origin();
-		if(psa->fRTL){
-		  assert (xOrigin <= 0);
-		  xOrigin *= -1;
-		}
+				if(psa->fRTL){
+					assert (xOrigin <= 0);
+					xOrigin *= -1;
+				}
 
 				//The advance width' of a glyph is the movement in the
 				//direction of writing from the starting point for rendering
@@ -128,44 +128,50 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 				//previous glyph by the advance values of the previous glyph.
 				//
 				if(it == it->attachedClusterBase()){
-		  yBase = 0.0;
+					yBase = 0.0;
 
-		  float advance = it->attachedClusterAdvance();
-		  assert(advance > 0);
+					float advance = it->attachedClusterAdvance();
+					assert(advance > 0);
 
 					//Base glyphs generally have a non-zero advance width
 					//and generally have a glyph offset of (0, 0).
 					glyphPositions.advanceWidths[i] = static_cast<int>(ceil(advance));   // x offset for combining glyph
 
-		  xClusterEnd = xOrigin;
-		  if(!psa->fRTL){
-			xClusterEnd += advance;
-		  }
-					glyphPositions.goffsets[i].du = 0;
+					glyphPositions.goffsets[i].du = static_cast<int>(floor(xClusterEnd - xOrigin));
+					xClusterEnd = xOrigin;
+					if(!psa->fRTL){
+						xClusterEnd += advance;
+					}
 				}
 				else {
 					//Combining glyphs generally have a zero advance width and
 					//generally have an offset that places them correctly in
 					//relation to the nearest preceding base glyph.
 					glyphPositions.advanceWidths[i] = 0;
-			  glyphPositions.goffsets[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
+					glyphPositions.goffsets[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
 				}
-		glyphPositions.goffsets[i].dv = static_cast<LONG>(ceil(it->yOffset() - yBase));  // y offset
-		yBase = it->yOffset();
-	  }
+				glyphPositions.goffsets[i].dv = static_cast<LONG>(ceil(it->yOffset() - yBase));  // y offset
+//				yBase = it->yOffset();
+			}
 			else {
-				glyphPositions.advanceWidths[i] = static_cast<int>(ceil(it->advanceWidth()));// should be rounded
+				float advance = it->advanceWidth();
+				glyphPositions.advanceWidths[i] = static_cast<int>(ceil(advance));// should be rounded
 				glyphPositions.goffsets[i].du = 0;
-		glyphPositions.goffsets[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
+				glyphPositions.goffsets[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
+				xClusterEnd = xOrigin;
+				if(!psa->fRTL){
+					xClusterEnd += advance;
+				}
+
 			}
 		}
 
 		delete[] rgIsClusterStart;
 		delete[] rgIsClusterEnd;
 
-	for(int i=0; i < cChars; ++i){
-	  pwLogClust[i] = static_cast<WORD>((psa->fRTL)?rgFirstGlyphOfCluster[i]:rgLastGlyphOfCluster[i]);
-	  }
+		for(int i=0; i < cChars; ++i){
+			pwLogClust[i] = static_cast<WORD>((psa->fRTL)?rgLastGlyphOfCluster[i]:rgFirstGlyphOfCluster[i]);
+		}
 
 		delete[] rgFirstGlyphOfCluster;
 		delete[] rgLastGlyphOfCluster;
@@ -177,8 +183,9 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 		glyphPositions.abc.abcB = static_cast<UINT>(ceil(seg.advanceWidth())); // drawn portion
 		glyphPositions.abc.abcC = 0; // space to add to trailing edge (may be negative)
 
-	SetGlyphPositions(*psc, psa, glyphPositions);
-	//TODO: figure out when we should return USP_E_SCRIPT_NOT_IN_FONT to enable font fallback
+		SetGlyphPositions(*psc, psa, glyphPositions);
+
+		//TODO: figure out when we should return USP_E_SCRIPT_NOT_IN_FONT to enable font fallback
 		return S_OK;
 	}
 	else

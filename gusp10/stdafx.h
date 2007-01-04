@@ -28,7 +28,7 @@
 #include <windows.h>
 
 
-#define UNISCRIBE_OPENTYPE 0x0100
+//#define UNISCRIBE_OPENTYPE 0x0100
 
 #include <usp10.h>
 #include <assert.h>
@@ -48,7 +48,7 @@
 #include <WinSegmentPainter.h>
 #include <ITextSource.h>
 
-#if USPBUILD <= 0400
+//#if USPBUILD <= 0400
 typedef ULONG OPENTYPE_TAG;
 
 typedef struct opentype_feature_record{
@@ -70,7 +70,7 @@ typedef struct script_glyphprop {
 	SCRIPT_VISATTR sva;
 	WORD reserved;
 } SCRIPT_GLYPHPROP;
-#endif
+//#endif
 
 bool IsGraphiteFont(HDC hdc);
 
