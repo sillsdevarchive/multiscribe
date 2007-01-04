@@ -23,6 +23,30 @@
 #define _WIN32_IE 0x0600	// Change this to the appropriate value to target other versions of IE.
 #endif
 
+// Header Annotations are defined in Visual Studio.Net 2005, but not in VS.Net 2003
+// 1400 = VS.Net 2005
+// 1310 =        2003
+// 1300 =        2002
+#if defined(_MSC_VER) && (_MSC_VER < 1400 )
+#define __checkReturn
+#define __deref_inout_ecount(a)
+#define __in_ecount(a)
+#define __inout_ecount(a)
+#define __inout_ecount_opt(a)
+#define __out_ecount(a)
+#define __out_ecount_part(a,b)
+#define __out_ecount_full(a)
+#define __out_ecount_full_opt(a)
+#define __deref_out_ecount(a)
+#define __in_ecount_opt(a)
+#define __in_opt
+#define __inout
+#define __in
+#define __out
+#define __out_opt
+#define __reserved
+#endif
+
 //#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
 #include <windows.h>

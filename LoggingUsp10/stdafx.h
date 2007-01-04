@@ -23,6 +23,30 @@
 #define _WIN32_IE 0x0600	// Change this to the appropriate value to target other versions of IE.
 #endif
 
+// Header Annotations are defined in Visual Studio.Net 2005, but not in VS.Net 2003
+// 1400 = VS.Net 2005
+// 1310 =        2003
+// 1300 =        2002
+#if defined(_MSC_VER) && (_MSC_VER < 1400 )
+#define __checkReturn
+#define __deref_inout_ecount(a)
+#define __in_ecount(a)
+#define __inout_ecount(a)
+#define __inout_ecount_opt(a)
+#define __out_ecount(a)
+#define __out_ecount_part(a,b)
+#define __out_ecount_full(a)
+#define __out_ecount_full_opt(a)
+#define __deref_out_ecount(a)
+#define __in_ecount_opt(a)
+#define __in_opt
+#define __inout
+#define __in
+#define __out
+#define __out_opt
+#define __reserved
+#endif
+
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
 #include <windows.h>
@@ -30,8 +54,38 @@
 
 
 //  additional headers your program requires here
-#define UNISCRIBE_OPENTYPE 0x0100
+//#define UNISCRIBE_OPENTYPE 0x0100
 #include <usp10.h>
+
+//#if (USPBUILD < 0420) // defined for Usp10.dll version 1.600 or greater
+typedef ULONG OPENTYPE_TAG;
+
+typedef struct opentype_feature_record{
+  OPENTYPE_TAG  tagFeature;
+  LONG  lParameter;
+} OPENTYPE_FEATURE_RECORD;
+
+typedef struct textrange_properties{
+	OPENTYPE_FEATURE_RECORD*   potfRecords;
+	int cotfRecords;
+} TEXTRANGE_PROPERTIES;
+
+typedef struct script_charprop{
+	WORD           fCanGlyphAlone : 1;
+	WORD           reserved       : 15;
+} SCRIPT_CHARPROP;
+
+typedef struct script_glyphprop {
+	SCRIPT_VISATTR sva;
+	WORD reserved;
+} SCRIPT_GLYPHPROP;
+//#endif
+
+#if defined(_MSC_VER) && (_MSC_VER < 1400 )// VS.Net 2005
+#define fopen_s(pFile,filename,mode) *pFile = fopen(filename,mode)
+#define SCRIPT_JUSTIFY_ARABIC_SEEN_M SCRIPT_JUSTIFY_RESERVED4
+
+#endif
 
 void __cdecl LogToDebugger(LPWSTR pszFormat, ...);
 void __cdecl LogToFile(LPWSTR pszFormat, ...);

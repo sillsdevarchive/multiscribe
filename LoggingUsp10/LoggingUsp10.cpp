@@ -124,9 +124,11 @@ void LogScriptControl(
 	if(psc->fLegacyBidiClass){
 		LOG(L"<LegacyBidiClass/>");
 	}
+#if defined(_MSC_VER) && (_MSC_VER >= 1400 )
 	if(psc->fMergeNeutralItems){
 		LOG(L"<MergeNeutralItems/>");
 	}
+#endif
 	if(psc->fReserved){
 		LOG(L"<Reserved>%d</Reserved>", psc->fReserved);
 	}
