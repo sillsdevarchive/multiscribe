@@ -92,12 +92,18 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 		SetLastScriptShapeTextSource(textSource);
 
 		int * rgFirstGlyphOfCluster = new int [cChars];
-		int * rgLastGlyphOfCluster = new int [cChars];
 		bool * rgIsClusterStart = new bool [cGlyphs];
-		bool * rgIsClusterEnd = new bool [cGlyphs];
 		int cCharsX, cgidX;
-		seg.getUniscribeClusters(rgFirstGlyphOfCluster, rgLastGlyphOfCluster, cChars, &cCharsX,
-								 rgIsClusterStart, rgIsClusterEnd, cGlyphs, &cgidX);
+	if(psa->fRTL){
+	  seg.getUniscribeClusters(NULL, rgFirstGlyphOfCluster,
+											   cChars, &cCharsX,
+											   NULL, rgIsClusterStart, *pcGlyphs, &cgidX);
+	}
+	else{
+	  seg.getUniscribeClusters(rgFirstGlyphOfCluster, NULL,
+											   cChars, &cCharsX,
+											   rgIsClusterStart, NULL, *pcGlyphs, &cgidX);
+	}
 
 		float xClusterEnd = 0.0;
 		int i = 0;
@@ -107,18 +113,27 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 
 			glyphPositions.glyphs[i] = pwOutGlyphs[i] = it->glyphID();
 
-			psva[i].fClusterStart = (psa->fRTL)?rgIsClusterEnd[i]: rgIsClusterStart[i];
+			psva[i].fClusterStart = rgIsClusterStart[i];
 			psva[i].fDiacritic = (psva[i].fClusterStart)?false:it->isAttached();
 			psva[i].fZeroWidth = false; // TODO: when does this need to be set?
 			psva[i].uJustification = SCRIPT_JUSTIFY_NONE; //TODO: when does this need to change
 
-			float xOrigin = it->origin();
+		glyphPositions.goffsets[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
+
+	  float xOrigin = it->origin();
+			float advance = it->advanceWidth();
 			if(psa->fRTL){
 				assert (xOrigin <= 0);
 				xOrigin *= -1;
+		xOrigin -= advance;
 			}
+	  if(i>0){
+		glyphPositions.goffsets[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
+	  }
+	  else {
+		glyphPositions.goffsets[i].du = 0; // sometimes happens that xOrigin is not 0.0 with RTL
+	  }
 			if(it->isAttached()){
-
 				//The advance width' of a glyph is the movement in the
 				//direction of writing from the starting point for rendering
 				//that glyph to the starting point for rendering the next glyph.
@@ -127,56 +142,32 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 				//previous glyph by the advance values of the previous glyph.
 				//
 				if(it == it->attachedClusterBase()){
-					float advance = it->attachedClusterAdvance();
-					assert(advance >= 0);
-
-		  //Base glyphs generally have a non-zero advance width
+					//Base glyphs generally have a non-zero advance width
 					//and generally have a glyph offset of (0, 0).
-					glyphPositions.advanceWidths[i] = static_cast<int>(ceil(advance));   // x offset for combining glyph
-
-					if(psa->fRTL){
-			glyphPositions.goffsets[i].du = 0;
-						xClusterEnd = xOrigin;
-		  }
-		  else {
-			glyphPositions.goffsets[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
-						xClusterEnd += advance;
-		  }
+					advance = it->attachedClusterAdvance();
+					assert(advance >= 0);
+					xClusterEnd += advance;
 				}
 				else {
 					//Combining glyphs generally have a zero advance width and
 					//generally have an offset that places them correctly in
 					//relation to the nearest preceding base glyph.
-					glyphPositions.advanceWidths[i] = 0;
-				glyphPositions.goffsets[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
+		  advance = 0;
 				}
 			}
 			else {
-				float advance = it->advanceWidth();
-				glyphPositions.advanceWidths[i] = static_cast<int>(ceil(advance));// should be rounded
-				if(psa->fRTL){
-				glyphPositions.goffsets[i].du = 0;
-		}
-		else {
-		  glyphPositions.goffsets[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
-		}
-				xClusterEnd = xOrigin;
-				if(!psa->fRTL){
-					xClusterEnd += advance;
-				}
+				xClusterEnd = xOrigin + advance;
 			}
-		glyphPositions.goffsets[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
+			glyphPositions.advanceWidths[i] = static_cast<int>(ceil(advance));// should be rounded
 		}
 
 		delete[] rgIsClusterStart;
-		delete[] rgIsClusterEnd;
 
 		for(int i=0; i < cChars; ++i){
-			pwLogClust[i] = static_cast<WORD>((psa->fRTL)?rgLastGlyphOfCluster[i]:rgFirstGlyphOfCluster[i]);
+			pwLogClust[i] = static_cast<WORD>(rgFirstGlyphOfCluster[i]);
 		}
 
 		delete[] rgFirstGlyphOfCluster;
-		delete[] rgLastGlyphOfCluster;
 
 		//TODO: really the segment should have public properties for
 		// members, m_dxsLeftOverhang, m_dxsRightOverhang and m_dxsVisibleWidth

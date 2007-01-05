@@ -81,51 +81,54 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShapeOpenType(
 		layout.setDumbFallback(true);	// except that we want it to try its best, no matter what
 		gr::RangeSegment seg(&font, &textSource, &layout);
 
-		std::pair<gr::GlyphIterator, gr::GlyphIterator> prGlyphIterators =
-			seg.glyphs();
+		std::pair<gr::GlyphIterator, gr::GlyphIterator> prGlyphIterators = seg.glyphs();
 
-		std::vector<gr::GlyphInfo> rgGlyphInfo;
+		int cGlyphs = 0;
 
 		for(gr::GlyphIterator it = prGlyphIterators.first;
-							  it != prGlyphIterators.second;
-							  ++it){
-			rgGlyphInfo.push_back(*it);
+										it != prGlyphIterators.second;
+										++it){
+			++cGlyphs;
 		}
 
 		// if the output buffer length, cMaxGlyphs, is insufficient.
-		if(rgGlyphInfo.size() >  static_cast<size_t>(std::max(cMaxGlyphs,0))){
+		if(cGlyphs >  std::max(cMaxGlyphs,0)){
 			return E_OUTOFMEMORY;
 		}
 
-		*pcGlyphs = static_cast<int>(rgGlyphInfo.size());
+		*pcGlyphs = cGlyphs;
 
 		int * rgFirstGlyphOfCluster = new int [cChars];
-		int * rgLastGlyphOfCluster = new int [cChars];
 		bool * rgIsClusterStart = new bool [*pcGlyphs];
-		bool * rgIsClusterEnd = new bool [*pcGlyphs];
 		int cCharsX, cgidX;
-		seg.getUniscribeClusters(rgFirstGlyphOfCluster, rgLastGlyphOfCluster,
-				 cChars, &cCharsX,
-								 rgIsClusterStart, rgIsClusterEnd, *pcGlyphs, &cgidX);
+	if(psa->fRTL){
+	  seg.getUniscribeClusters(NULL, rgFirstGlyphOfCluster,
+											   cChars, &cCharsX,
+											   NULL, rgIsClusterStart, *pcGlyphs, &cgidX);
+	}
+	else{
+	  seg.getUniscribeClusters(rgFirstGlyphOfCluster, NULL,
+											   cChars, &cCharsX,
+											   rgIsClusterStart, NULL, *pcGlyphs, &cgidX);
+	}
 
-
-		for(int i=0; i != *pcGlyphs; ++i){
-		  pwOutGlyphs[i] = rgGlyphInfo[i].glyphID();
-		  pOutGlyphProps[i].sva.fClusterStart = (psa->fRTL)?rgIsClusterEnd[i]: rgIsClusterStart[i];
-		  pOutGlyphProps[i].sva.fDiacritic = (pOutGlyphProps[i].sva.fClusterStart)?false:rgGlyphInfo[i].isAttached(); // VERIFY
+	int i = 0;
+		for(gr::GlyphIterator it = prGlyphIterators.first;
+									  it != prGlyphIterators.second;
+						  ++it, ++i){
+		pwOutGlyphs[i] = it->glyphID();
+		  pOutGlyphProps[i].sva.fClusterStart = rgIsClusterStart[i];
+		  pOutGlyphProps[i].sva.fDiacritic = (pOutGlyphProps[i].sva.fClusterStart)?false:it->isAttached();
 		  pOutGlyphProps[i].sva.fZeroWidth = false; // TODO: when does this need to be set?
 		  pOutGlyphProps[i].sva.uJustification = SCRIPT_JUSTIFY_NONE; //TODO: when does this need to change
 		}
 
 		delete[] rgIsClusterStart;
-		delete[] rgIsClusterEnd;
-
 		for(int i=0; i < cChars; ++i){
-	  pwLogClust[i] = static_cast<WORD>((psa->fRTL)?rgLastGlyphOfCluster[i]:rgFirstGlyphOfCluster[i]);
+	  pwLogClust[i] = static_cast<WORD>(rgFirstGlyphOfCluster[i]);
 		}
 
 		delete[] rgFirstGlyphOfCluster;
-		delete[] rgLastGlyphOfCluster;
 		return S_OK;
 	}
 	else {

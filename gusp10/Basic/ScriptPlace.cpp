@@ -87,13 +87,24 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 			float xClusterEnd = 0.0;
 			int i = 0;
 			for(gr::GlyphIterator it = prGlyphIterators.first;
-								  it != prGlyphIterators.second;
-								  ++it, ++i){
+											it != prGlyphIterators.second;
+											++it, ++i){
+				pGoffset[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
+
 		  float xOrigin = it->origin();
+				float advance = it->advanceWidth();
 		  if(textSource.getRightToLeft(0)){
 			assert (xOrigin <= 0);
 			xOrigin *= -1;
+			xOrigin -= advance;
 		  }
+		  if(i>0){
+				  pGoffset[i].du = static_cast<int>(floor(xOrigin - xClusterEnd)); // allow for kerning
+		  }
+		  else {
+			pGoffset[i].du = 0; // sometimes happens that xOrigin is not 0.0 with RTL
+		  }
+
 		  if(it->isAttached()){
 
 					//The advance width' of a glyph is the movement in the
@@ -104,44 +115,23 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 					//previous glyph by the advance values of the previous glyph.
 					//
 					if(it == it->attachedClusterBase()){
-			  float advance = it->attachedClusterAdvance();
-			  assert(advance >= 0);
-
 						//Base glyphs generally have a non-zero advance width
 						//and generally have a glyph offset of (0, 0).
-						piAdvance[i] = static_cast<int>(ceil(advance));   // x offset for combining glyph
-					if(textSource.getRightToLeft(0)){
-				pGoffset[i].du = 0;
-				xClusterEnd = xOrigin;
-			  }
-			  else {
-				pGoffset[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
-				xClusterEnd += advance;
-			  }
+			  advance = it->attachedClusterAdvance();
+			  assert(advance >= 0);
+			  xClusterEnd += advance;
 					}
 					else {
 						//Combining glyphs generally have a zero advance width and
 						//generally have an offset that places them correctly in
 						//relation to the nearest preceding base glyph.
-						piAdvance[i] = 0;
-				  pGoffset[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
+						advance = 0;
 					}
 				}
 				else {
-					float advance = it->advanceWidth();
-					piAdvance[i] = static_cast<int>(ceil(advance));// should be rounded
-			if(textSource.getRightToLeft(0)){
-					  pGoffset[i].du = 0;
-			}
-			else {
-					  pGoffset[i].du = static_cast<int>(floor(xOrigin - xClusterEnd)); // allow for kerning
-			}
-					xClusterEnd = xOrigin;
-					if(textSource.getRightToLeft(0)){
-						xClusterEnd += advance;
-					}
+					xClusterEnd = xOrigin + advance;
 				}
-				pGoffset[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
+			piAdvance[i] = static_cast<int>(ceil(advance));// should be rounded
 			}
 
 		  if(pABC){

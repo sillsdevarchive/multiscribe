@@ -92,13 +92,27 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 		float xClusterEnd = 0.0;
 		int i = 0;
 		for(gr::GlyphIterator it = prGlyphIterators.first;
-								  it != prGlyphIterators.second;
-								  ++it, ++i){
+										  it != prGlyphIterators.second;
+										  ++it, ++i){
 			if(i > cGlyphs){
 				break;
 			}
 
-			gr::GlyphIterator itNext = it + 1;
+			pGoffset[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
+
+	  float xOrigin = it->origin();
+			float advance = it->advanceWidth();
+	  if(psa->fRTL){
+		assert (xOrigin <= 0);
+		xOrigin *= -1;
+		xOrigin -= advance;
+	  }
+	  if(i>0){
+			  pGoffset[i].du = static_cast<int>(floor(xOrigin - xClusterEnd)); // allow for kerning
+	  }
+	  else {
+		pGoffset[i].du = 0; // sometimes happens that xOrigin is not 0.0 with RTL
+	  }
 
 			if(it->isAttached()){
 				//The advance width' of a glyph is the movement in the
@@ -111,23 +125,21 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 				if(it == it->attachedClusterBase()){
 					//Base glyphs generally have a non-zero advance width
 					//and generally have a glyph offset of (0, 0).
-					piAdvance[i] = static_cast<int>(ceil(it->attachedClusterAdvance()));   // x offset for combining glyph
-					xClusterEnd = it->origin() + it->attachedClusterAdvance();
-					pGoffset[i].du = 0;
+		  advance = it->attachedClusterAdvance();
+		  assert(advance >=0);
+					xClusterEnd += advance;
 				}
 				else {
 					//Combining glyphs generally have a zero advance width and
 					//generally have an offset that places them correctly in
 					//relation to the nearest preceding base glyph.
-					piAdvance[i] = 0;
-					pGoffset[i].du = static_cast<int>(floor(it->origin() - xClusterEnd));
+					advance = 0;
 				}
 			}
 			else {
-				piAdvance[i] = static_cast<int>(ceil(it->advanceWidth()));// should be rounded
-				pGoffset[i].du = 0;
+				xClusterEnd = xOrigin + advance;
 			}
-			pGoffset[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
+		piAdvance[i] = static_cast<int>(ceil(advance));// should be rounded
 		}
 		if(i != cGlyphs){
 			assert(false);
