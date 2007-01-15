@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\graphite\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\graphite\include&quot;;udis86-1.4"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE ;_SCL_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,10 +62,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="graphite.lib"
+				AdditionalDependencies="graphite.lib udis86.lib"
 				OutputFile="$(OutDir)\usp10.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;..\graphite\debug&quot;"
+				AdditionalLibraryDirectories="&quot;..\graphite\debug&quot;;&quot;udis86-1.4\libudis86&quot;"
 				GenerateManifest="true"
 				ModuleDefinitionFile="gusp10.def"
 				GenerateDebugInformation="true"
@@ -122,7 +122,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;..\graphite\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\graphite\include&quot;;udis86-1.4"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE ;_SCL_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -142,10 +142,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="graphite.lib"
+				AdditionalDependencies="graphite.lib udis86.lib"
 				OutputFile="$(OutDir)\usp10.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;..\graphite\release&quot;"
+				AdditionalLibraryDirectories="&quot;..\graphite\release&quot;;&quot;udis86-1.4\libudis86&quot;"
 				ModuleDefinitionFile="gusp10.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
