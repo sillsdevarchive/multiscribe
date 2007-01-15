@@ -54,9 +54,6 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 			FreeGlyphPositionsForSession(*psc);
 		}
 
-		if(psa->fRTL){
-		  assert(psa->fLogicalOrder); // no support yet for visual order
-		}
 		TextSource textSource(pwcChars, cChars);
 		textSource.setRightToLeft(psa->fRTL);
 
@@ -105,12 +102,14 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 											   rgIsClusterStart, NULL, *pcGlyphs, &cgidX);
 	}
 
-		float xClusterEnd = 0.0;
+	float xClusterEnd = 0.0;
 		int i = 0;
+	if(psa->fRTL && !psa->fLogicalOrder){
+	  i = cGlyphs-1;
+	}
 		for(gr::GlyphIterator it = prGlyphIterators.first;
 							  it != prGlyphIterators.second;
-							  ++it, ++i){
-
+							  ++it){
 			glyphPositions.glyphs[i] = pwOutGlyphs[i] = it->glyphID();
 
 			psva[i].fClusterStart = rgIsClusterStart[i];
@@ -159,12 +158,26 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 				xClusterEnd = xOrigin + advance;
 			}
 			glyphPositions.advanceWidths[i] = static_cast<int>(ceil(advance));// should be rounded
-		}
+
+	  if(psa->fRTL && !psa->fLogicalOrder){
+		--i;
+	  }
+	  else {
+		++i;
+	  }
+	}
 
 		delete[] rgIsClusterStart;
 
+	int iGlyphPosition;
 		for(int i=0; i < cChars; ++i){
-			pwLogClust[i] = static_cast<WORD>(rgFirstGlyphOfCluster[i]);
+	  if(psa->fRTL && !psa->fLogicalOrder){
+		iGlyphPosition = cGlyphs - i - 1;
+	  }
+	  else {
+		iGlyphPosition = i;
+	  }
+			pwLogClust[i] = static_cast<WORD>(rgFirstGlyphOfCluster[iGlyphPosition]);
 		}
 
 		delete[] rgFirstGlyphOfCluster;

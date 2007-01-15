@@ -86,6 +86,9 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 
 			float xClusterEnd = 0.0;
 			int i = 0;
+		if(psa->fRTL && !psa->fLogicalOrder){
+		  i = cGlyphs-1;
+		}
 			for(gr::GlyphIterator it = prGlyphIterators.first;
 											it != prGlyphIterators.second;
 											++it, ++i){
@@ -132,6 +135,13 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 					xClusterEnd = xOrigin + advance;
 				}
 			piAdvance[i] = static_cast<int>(ceil(advance));// should be rounded
+
+		  if(psa->fRTL && !psa->fLogicalOrder){
+			--i;
+		  }
+		  else {
+			++i;
+		  }
 			}
 
 		  if(pABC){
