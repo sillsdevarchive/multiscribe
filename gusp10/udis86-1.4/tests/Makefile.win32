@@ -2,7 +2,7 @@
 
 CC		= cl
 RM		= del
-
+CFLAGS		= /MT
 
 .SUFFIXES: .c .obj
 .c.obj:

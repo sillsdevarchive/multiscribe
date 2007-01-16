@@ -61,8 +61,10 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 		gr::WinFont font(hdc);
 
 		// Create the segment.
-		gr::LayoutEnvironment layout;	// use all the defaults...
-		layout.setDumbFallback(true);	// except that we want it to try its best, no matter what
+		gr::LayoutEnvironment layout;
+		layout.setStartOfLine(false);
+		layout.setEndOfLine(false);
+		layout.setDumbFallback(true);	// we want it to try its best, no matter what
 		gr::RangeSegment seg(&font, &textSource, &layout);
 
 		std::pair<gr::GlyphIterator, gr::GlyphIterator> prGlyphIterators = seg.glyphs();
