@@ -86,17 +86,31 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 
 			float xClusterEnd = 0.0;
 			int i = 0;
+		gr::GlyphIterator it;
 		if(psa->fRTL && !psa->fLogicalOrder){
-		  i = cGlyphs-1;
+		  it = prGlyphIterators.second;
 		}
-			for(gr::GlyphIterator it = prGlyphIterators.first;
-											it != prGlyphIterators.second;
-											++it, ++i){
+		else {
+		  it = prGlyphIterators.first;
+		}
+
+		for(;;){
+		  if(psa->fRTL && !psa->fLogicalOrder){
+			if(it == prGlyphIterators.first) {
+			  break;
+			}
+			--it;
+		  }
+		  else {
+			if(it == prGlyphIterators.second) {
+			  break;
+			}
+		  }
 				pGoffset[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
 
 		  float xOrigin = it->origin();
 				float advance = it->advanceWidth();
-		  if(textSource.getRightToLeft(0)){
+		  if(textSource.getRightToLeft(0) && psa->fLogicalOrder){
 			assert (xOrigin <= 0);
 			xOrigin *= -1;
 			xOrigin -= advance;
@@ -136,12 +150,10 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 				}
 			piAdvance[i] = static_cast<int>(ceil(advance));// should be rounded
 
-		  if(psa->fRTL && !psa->fLogicalOrder){
-			--i;
+		  if(!(psa->fRTL && !psa->fLogicalOrder)){
+			++it;
 		  }
-		  else {
-			++i;
-		  }
+		  ++i;
 			}
 
 		  if(pABC){

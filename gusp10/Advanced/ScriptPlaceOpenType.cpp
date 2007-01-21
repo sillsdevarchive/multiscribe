@@ -91,18 +91,35 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 
 		float xClusterEnd = 0.0;
 		int i = 0;
-		for(gr::GlyphIterator it = prGlyphIterators.first;
-										  it != prGlyphIterators.second;
-										  ++it, ++i){
-			if(i > cGlyphs){
-				break;
-			}
+	gr::GlyphIterator it;
+	if(psa->fRTL && !psa->fLogicalOrder){
+	  it = prGlyphIterators.second;
+	}
+	else {
+	  it = prGlyphIterators.first;
+	}
+
+	for(;;){
+		if(i > cGlyphs){
+			break;
+		}
+	  if(psa->fRTL && !psa->fLogicalOrder){
+		if(it == prGlyphIterators.first) {
+		  break;
+		}
+		--it;
+	  }
+	  else {
+		if(it == prGlyphIterators.second) {
+		  break;
+		}
+	  }
 
 			pGoffset[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
 
 	  float xOrigin = it->origin();
 			float advance = it->advanceWidth();
-	  if(psa->fRTL){
+	  if(psa->fRTL && psa->fLogicalOrder){
 		assert (xOrigin <= 0);
 		xOrigin *= -1;
 		xOrigin -= advance;
@@ -140,6 +157,11 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 				xClusterEnd = xOrigin + advance;
 			}
 		piAdvance[i] = static_cast<int>(ceil(advance));// should be rounded
+
+	  if(!(psa->fRTL && !psa->fLogicalOrder)){
+		++it;
+	  }
+	  ++i;
 		}
 		if(i != cGlyphs){
 			assert(false);

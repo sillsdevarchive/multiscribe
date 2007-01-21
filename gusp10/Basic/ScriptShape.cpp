@@ -106,12 +106,27 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 
 	float xClusterEnd = 0.0;
 		int i = 0;
+	gr::GlyphIterator it;
 	if(psa->fRTL && !psa->fLogicalOrder){
-	  i = cGlyphs-1;
+	  it = prGlyphIterators.second;
 	}
-		for(gr::GlyphIterator it = prGlyphIterators.first;
-							  it != prGlyphIterators.second;
-							  ++it){
+	else {
+	  it = prGlyphIterators.first;
+	}
+
+	for(;;){
+	  if(psa->fRTL && !psa->fLogicalOrder){
+		if(it == prGlyphIterators.first) {
+		  break;
+		}
+		--it;
+	  }
+	  else {
+		if(it == prGlyphIterators.second) {
+		  break;
+		}
+	  }
+
 			glyphPositions.glyphs[i] = pwOutGlyphs[i] = it->glyphID();
 
 			psva[i].fClusterStart = rgIsClusterStart[i];
@@ -123,7 +138,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 
 	  float xOrigin = it->origin();
 			float advance = it->advanceWidth();
-			if(psa->fRTL){
+			if(psa->fRTL && psa->fLogicalOrder){
 				assert (xOrigin <= 0);
 				xOrigin *= -1;
 		xOrigin -= advance;
@@ -161,12 +176,10 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 			}
 			glyphPositions.advanceWidths[i] = static_cast<int>(ceil(advance));// should be rounded
 
-	  if(psa->fRTL && !psa->fLogicalOrder){
-		--i;
+	  if(!(psa->fRTL && !psa->fLogicalOrder)){
+		++it;
 	  }
-	  else {
-		++i;
-	  }
+	   ++i;
 	}
 
 		delete[] rgIsClusterStart;

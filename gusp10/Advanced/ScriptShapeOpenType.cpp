@@ -113,19 +113,48 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShapeOpenType(
 	}
 
 	int i = 0;
-		for(gr::GlyphIterator it = prGlyphIterators.first;
-									  it != prGlyphIterators.second;
-						  ++it, ++i){
+	gr::GlyphIterator it;
+	if(psa->fRTL && !psa->fLogicalOrder){
+	  it = prGlyphIterators.second;
+	}
+	else {
+	  it = prGlyphIterators.first;
+	}
+
+	for(;;){
+	  if(psa->fRTL && !psa->fLogicalOrder){
+		if(it == prGlyphIterators.first) {
+		  break;
+		}
+		--it;
+	  }
+	  else {
+		if(it == prGlyphIterators.second) {
+		  break;
+		}
+	  }
 		pwOutGlyphs[i] = it->glyphID();
 		  pOutGlyphProps[i].sva.fClusterStart = rgIsClusterStart[i];
 		  pOutGlyphProps[i].sva.fDiacritic = (pOutGlyphProps[i].sva.fClusterStart)?false:it->isAttached();
 		  pOutGlyphProps[i].sva.fZeroWidth = false; // TODO: when does this need to be set?
 		  pOutGlyphProps[i].sva.uJustification = SCRIPT_JUSTIFY_NONE; //TODO: when does this need to change
+	  if(!(psa->fRTL && !psa->fLogicalOrder)){
+		++it;
+	  }
+	   ++i;
 		}
 
 		delete[] rgIsClusterStart;
-		for(int i=0; i < cChars; ++i){
-	  pwLogClust[i] = static_cast<WORD>(rgFirstGlyphOfCluster[i]);
+
+	int iGlyphPosition;
+	for(int i=0; i < cChars; ++i){
+	  if(psa->fRTL && !psa->fLogicalOrder){
+		iGlyphPosition = cGlyphs - i - 1;
+	  }
+	  else {
+		iGlyphPosition = i;
+	  }
+			pwLogClust[i] = static_cast<WORD>(rgFirstGlyphOfCluster[iGlyphPosition]);
 		}
 
 		delete[] rgFirstGlyphOfCluster;
