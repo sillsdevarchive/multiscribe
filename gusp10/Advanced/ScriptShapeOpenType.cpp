@@ -101,16 +101,9 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShapeOpenType(
 		int * rgFirstGlyphOfCluster = new int [cChars];
 		bool * rgIsClusterStart = new bool [*pcGlyphs];
 		int cCharsX, cgidX;
-	if(psa->fRTL){
-	  seg.getUniscribeClusters(NULL, rgFirstGlyphOfCluster,
+	seg.getUniscribeClusters(rgFirstGlyphOfCluster,
 											   cChars, &cCharsX,
-											   NULL, rgIsClusterStart, *pcGlyphs, &cgidX);
-	}
-	else{
-	  seg.getUniscribeClusters(rgFirstGlyphOfCluster, NULL,
-											   cChars, &cCharsX,
-											   rgIsClusterStart, NULL, *pcGlyphs, &cgidX);
-	}
+											   rgIsClusterStart, *pcGlyphs, &cgidX);
 
 	int i = 0;
 	gr::GlyphIterator it;

@@ -1,99 +1,28 @@
-Index: include/Segment.h
-===================================================================
---- include/Segment.h	(revision 321)
-+++ include/Segment.h	(working copy)
-@@ -120,9 +120,12 @@
- 		LineBrk lbPref, LineBrk lbWorst, float dxMaxWidth,
- 		float * pdxBreakWidth, bool fStartLine = true, bool fEndLine = true);
- 
--	GrResult getUniscribeClusters(
--		int * prgigbb1stOfCluster, int cchMax, int * pcch,
--		bool * pfClusterStart, int cfMax, int * pcf);
-+GrResult Segment::getUniscribeClusters(
-+	int * prgiginfFirstOfCluster, 
-+  int * prgiginfLastOfCluster, int cchMax, int * pcch,
-+	bool * pfClusterStart, 
-+  bool * pfClusterEnd,
-+  int cfMax, int * pcf);
- 
- 	//GrResult GetGlyphsAndPositions(
- 	//	Rect rsArg, Rect rdArg,	int cgidMax, int * pcgidRet, utf16 * prggid,
 Index: src/segment/Segment.cpp
 ===================================================================
---- src/segment/Segment.cpp	(revision 321)
+--- src/segment/Segment.cpp	(revision 323)
 +++ src/segment/Segment.cpp	(working copy)
-@@ -2700,15 +2700,22 @@
- 	TODO: convert from GlyphInfo objects which are RTL.
- ----------------------------------------------------------------------------------------------*/
- GrResult Segment::getUniscribeClusters(
--	int * prgiginfFirstOfCluster, int cchMax, int * pcch,
--	bool * pfClusterStart, int cfMax, int * pcf)
-+	int * prgiginfFirstOfCluster, 
-+  int * prgiginfLastOfCluster, int cchMax, int * pcch,
-+	bool * pfClusterStart, 
-+  bool * pfClusterEnd,
-+  int cfMax, int * pcf)
- {
- 	ChkGrOutPtr(pcch);
- 	if (prgiginfFirstOfCluster)
- 		ChkGrArrayArg(prgiginfFirstOfCluster, cchMax);
-+	if (prgiginfLastOfCluster)
-+		ChkGrArrayArg(prgiginfLastOfCluster, cchMax);
- 	ChkGrOutPtr(pcf);
- 	if (pfClusterStart)
- 		ChkGrArrayArg(pfClusterStart, cfMax);
-+	if (pfClusterEnd)
-+		ChkGrArrayArg(pfClusterEnd, cfMax);
- 
- 	GrResult res = kresOk;
- 
-@@ -2728,14 +2735,14 @@
- 	{
- 		if (cchMax == 0 && cfMax == 0)
- 			res = kresFalse; // just asking for size information
--		else if (prgiginfFirstOfCluster || cchMax > 0)
-+		else if (prgiginfFirstOfCluster || prgiginfLastOfCluster || cchMax > 0)
- 			res = kresInvalidArg; // not enough space
- 	}
- 	if (cfMax < m_cginf)
- 	{
- 		if (cchMax == 0 && cfMax == 0)
- 			res = kresFalse;
--		else if (pfClusterStart || cfMax > 0)
-+		else if (pfClusterStart || pfClusterEnd || cfMax > 0)
- 			res = kresInvalidArg;
- 	}
- 	if (res != kresOk)
-@@ -2851,10 +2858,19 @@
- 			pfClusterStart[iginf] = false;
- 	}
- 
-+	if (pfClusterEnd)
-+	{
-+		//	Initialize.
-+		int iginf;
-+		for (iginf = 0; iginf < m_cginf; iginf++)
-+			pfClusterEnd[iginf] = false;
-+	}
-+
+@@ -2854,7 +2854,7 @@
  	//	To skip line-break slots; remember that the number of output slots equals the
  	//	number of gbbs plus initial and/or final line-break slots if any.
  	//	In this case the beginning of the first cluster indicates the first real glyph.
- 	int isloutFirstReal = (m_dichwLim) ? visloutBefore[0] : 0;
-+  int isloutLastReal =  (m_dichwLim) ? visloutAfter[0] : 0;
+-	int isloutFirstReal = (m_dichwLim) ? visloutBefore[0] : 0;
++  int isloutFirstReal = (m_dichwLim) ? ((m_fWsRtl)? visloutAfter[0] : visloutBefore[0]) : 0;
  
  	//	Kludge to make assertions below easier:
  	if (m_dichwLim > 0)
-@@ -2871,8 +2887,12 @@
+@@ -2870,9 +2870,12 @@
+ 		// right-to-left situations.
  
  		if (prgiginfFirstOfCluster)
- 			prgiginfFirstOfCluster[ich] = LogicalToPhysicalSurface(visloutBefore[ich]);
-+		if (prgiginfLastOfCluster)
-+			prgiginfLastOfCluster[ich] = LogicalToPhysicalSurface(visloutAfter[ich]);
+-			prgiginfFirstOfCluster[ich] = LogicalToPhysicalSurface(visloutBefore[ich]);
++			prgiginfFirstOfCluster[ich] = LogicalToPhysicalSurface(
++                                      (m_fWsRtl)?visloutAfter[ich]:visloutBefore[ich]);
++    int clusterStartPos = ((m_fWsRtl)?visloutAfter[ich]:visloutBefore[ich]) - isloutFirstReal;
++
  		if (pfClusterStart)
- 			pfClusterStart[visloutBefore[ich] - isloutFirstReal] = true;
-+		if (pfClusterEnd)
-+			pfClusterEnd[visloutAfter[ich] - isloutLastReal] = true;
+-			pfClusterStart[visloutBefore[ich] - isloutFirstReal] = true;
++			pfClusterStart[clusterStartPos] = true;
  
  		Assert((visloutBefore[ich] == visloutBefore[ich + 1] &&
  			visloutAfter[ich] == visloutAfter[ich + 1])

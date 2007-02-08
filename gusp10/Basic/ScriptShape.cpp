@@ -93,16 +93,9 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 		int * rgFirstGlyphOfCluster = new int [cChars];
 		bool * rgIsClusterStart = new bool [cGlyphs];
 		int cCharsX, cgidX;
-	if(psa->fRTL){
-	  seg.getUniscribeClusters(NULL, rgFirstGlyphOfCluster,
+	seg.getUniscribeClusters(rgFirstGlyphOfCluster,
 											   cChars, &cCharsX,
-											   NULL, rgIsClusterStart, *pcGlyphs, &cgidX);
-	}
-	else{
-	  seg.getUniscribeClusters(rgFirstGlyphOfCluster, NULL,
-											   cChars, &cCharsX,
-											   rgIsClusterStart, NULL, *pcGlyphs, &cgidX);
-	}
+											   rgIsClusterStart, *pcGlyphs, &cgidX);
 
 	float xClusterEnd = 0.0;
 		int i = 0;
