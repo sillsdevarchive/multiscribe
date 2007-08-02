@@ -77,5 +77,3 @@ HRESULT	hResult = ScriptTextOut(hdc,psc,x,y,fuOptions,lprc,psa,pwcReserved,iRese
 //#ifdef __cplusplus
 //}
 //#endif
-
-
