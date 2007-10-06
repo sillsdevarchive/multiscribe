@@ -44,7 +44,9 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptTextOut(
 //	WRAP_BEGIN(ScriptTextOut, LPFNSCRIPTTEXTOUT)
 
   LPFNSCRIPTTEXTOUT ScriptTextOut = (LPFNSCRIPTTEXTOUT) GetOriginalScriptTextOut();
-//#define COLORIZED
+#if _DEBUG
+#define COLORIZED
+#endif
 
 #if defined(COLORIZED)
 	COLORREF OriginalColor;

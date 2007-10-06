@@ -124,7 +124,7 @@ void LogScriptControl(
 	if(psc->fLegacyBidiClass){
 		LOG(L"<LegacyBidiClass/>");
 	}
-#if defined(_MSC_VER) && (_MSC_VER >= 1400 )
+#if defined(USPBUILD) && (USPBUILD > 0400 )
 	if(psc->fMergeNeutralItems){
 		LOG(L"<MergeNeutralItems/>");
 	}
@@ -223,10 +223,12 @@ void LogScriptVisualAttributes(
 		case SCRIPT_JUSTIFY_ARABIC_SEEN:      // Highest priority: Initial shape of Seen(U+633) (end)
 			LOG(L"<Justification class='ArabicSeen'/>");
 			break;
+#if defined(USPBUILD) && (USPBUILD > 0400 )
 		case SCRIPT_JUSTIFY_ARABIC_SEEN_M:    // Reserved #4
 			LOG(L"<Justification class='ArabicSeenM'/>");
 			break;
-	}
+#endif
+  }
 	if(psva->fClusterStart){
 		LOG(L"<ClusterStart/>");
 	}
@@ -398,7 +400,22 @@ void LogHResult(HRESULT hResult){
 			break;
 		case USP_E_SCRIPT_NOT_IN_FONT :
 			LOG(L"<result>USP_E_SCRIPT_NOT_IN_FONT</result>");
+	  break;
+	case E_PENDING:
+	  LOG(L"<result>E_PENDING</result>");
+	  break;
 		default:
 			LOG(L"<result>0x%x</result>", hResult);
 	}
+}
+
+void LogHdc(HDC hdc){
+  LOG(L"<hdc>%d</hdc>", hdc);
+	if(hdc){
+	int cw = GetTextFace(hdc,0,NULL);
+	WCHAR * szFontName = new WCHAR[cw];
+	GetTextFace(hdc, cw, szFontName);
+	LOG(L"<fontName>%s</fontName>", szFontName);
+	delete[] szFontName;
+  }
 }

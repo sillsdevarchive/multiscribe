@@ -1,0 +1,5 @@
+LIBRARY	usp10.dll
+EXPORTS
+	ScriptGetProperties=GraphiteEnabledScriptGetProperties
+  ScriptGetCMap=GraphiteEnabledScriptGetCMap
+  ScriptGetFontProperties=GraphiteEnabledScriptGetFontProperties

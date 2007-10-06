@@ -3,6 +3,17 @@
 #include "../stdafx.h"
 #include "../TextSource.h"
 LPVOID GetOriginalScriptShapeOpenType();
+HRESULT GetGlyphsAndPositions(
+	HDC                                                     hdc,            // In    Optional (see under caching)
+	__deref_inout_ecount(1) SCRIPT_CACHE                    *psc,           // InOut Cache handle
+	__in_ecount(cChars) const WCHAR                         *pwcChars,      // In    Logical unicode run
+	int                                                     cChars,         // In    Length of unicode run
+	int                                                     cMaxGlyphs,     // In    Max glyphs to generate
+	__inout_ecount(1) SCRIPT_ANALYSIS                       *psa,           // InOut Result of ScriptItemize (may have fNoGlyphIndex set)
+	__out_ecount_part(cMaxGlyphs, *pcGlyphs) WORD           *pwOutGlyphs,   // Out   Output glyph buffer
+	__out_ecount_full(cChars) WORD                          *pwLogClust,    // Out   Logical clusters
+	__out_ecount_part(cMaxGlyphs, *pcGlyphs) SCRIPT_VISATTR *psva,          // Out   Visual glyph attributes
+	__out_ecount(1) int                                     *pcGlyphs);     // Out   Count of glyphs generated
 
 /// ScriptShapeOpenType
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSHAPEOPENTYPE) (
@@ -60,98 +71,29 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShapeOpenType(
 
 	if(IsGraphiteFont(hdc))
 	{
+	HRESULT hResult;
 		if(!*psc)
 		{
-	  HRESULT hResult = ScriptShapeOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,cChars,cMaxGlyphs,pwLogClust,pCharProps,pwOutGlyphs,pOutGlyphProps,pcGlyphs);
-	  hResult;
+	  hResult = ScriptShapeOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,cChars,cMaxGlyphs,pwLogClust,pCharProps,pwOutGlyphs,pOutGlyphProps,pcGlyphs);
 		//	WRAP_BEGIN(ScriptShapeOpenType, LPFNSCRIPTSHAPEOPENTYPE)
 		//	// only to setup the cache correctly:
 		//	hResult = ScriptShapeOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,cChars,cMaxGlyphs,pwLogClust,pCharProps,pwOutGlyphs,pOutGlyphProps,pcGlyphs);
 		//	WRAP_END_NO_RETURN
 		}
 
-		 TextSource textSource(pwcChars, cChars);
-		 textSource.setRightToLeft(psa->fRTL);
+	SCRIPT_VISATTR *psva = new SCRIPT_VISATTR[cMaxGlyphs];
+	hResult = GetGlyphsAndPositions(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust,psva,pcGlyphs);
 
-		// Create the Graphite font object.
-		gr::WinFont font(hdc);
-
-		// Create the segment.
-		gr::LayoutEnvironment layout;	// use all the defaults...
-		layout.setDumbFallback(true);	// except that we want it to try its best, no matter what
-		gr::RangeSegment seg(&font, &textSource, &layout);
-
-		std::pair<gr::GlyphIterator, gr::GlyphIterator> prGlyphIterators = seg.glyphs();
-
-		int cGlyphs = 0;
-
-		for(gr::GlyphIterator it = prGlyphIterators.first;
-										it != prGlyphIterators.second;
-										++it){
-			++cGlyphs;
-		}
-
-		// if the output buffer length, cMaxGlyphs, is insufficient.
-		if(cGlyphs >  std::max(cMaxGlyphs,0)){
-			return E_OUTOFMEMORY;
-		}
-
-		*pcGlyphs = cGlyphs;
-
-		int * rgFirstGlyphOfCluster = new int [cChars];
-		bool * rgIsClusterStart = new bool [*pcGlyphs];
-		int cCharsX, cgidX;
-	seg.getUniscribeClusters(rgFirstGlyphOfCluster,
-											   cChars, &cCharsX,
-											   rgIsClusterStart, *pcGlyphs, &cgidX);
-
-	int i = 0;
-	gr::GlyphIterator it;
-	if(psa->fRTL && !psa->fLogicalOrder){
-	  it = prGlyphIterators.second;
+	if(SUCCEEDED(hResult)){
+	  for(int i=0; i < *pcGlyphs; ++i){
+		pOutGlyphProps[i].sva.fClusterStart = psva[i].fClusterStart;
+		pOutGlyphProps[i].sva.fDiacritic = psva[i].fDiacritic;
+		pOutGlyphProps[i].sva.fZeroWidth = psva[i].fZeroWidth;
+		pOutGlyphProps[i].sva.uJustification = psva[i].uJustification;
+	  }
 	}
-	else {
-	  it = prGlyphIterators.first;
-	}
-
-	for(;;){
-	  if(psa->fRTL && !psa->fLogicalOrder){
-		if(it == prGlyphIterators.first) {
-		  break;
-		}
-		--it;
-	  }
-	  else {
-		if(it == prGlyphIterators.second) {
-		  break;
-		}
-	  }
-		pwOutGlyphs[i] = it->glyphID();
-		  pOutGlyphProps[i].sva.fClusterStart = rgIsClusterStart[i];
-		  pOutGlyphProps[i].sva.fDiacritic = (pOutGlyphProps[i].sva.fClusterStart)?false:it->isAttached();
-		  pOutGlyphProps[i].sva.fZeroWidth = false; // TODO: when does this need to be set?
-		  pOutGlyphProps[i].sva.uJustification = SCRIPT_JUSTIFY_NONE; //TODO: when does this need to change
-	  if(!(psa->fRTL && !psa->fLogicalOrder)){
-		++it;
-	  }
-	   ++i;
-		}
-
-		delete[] rgIsClusterStart;
-
-	int iGlyphPosition;
-	for(int i=0; i < cChars; ++i){
-	  if(psa->fRTL && !psa->fLogicalOrder){
-		iGlyphPosition = cGlyphs - i - 1;
-	  }
-	  else {
-		iGlyphPosition = i;
-	  }
-			pwLogClust[i] = static_cast<WORD>(rgFirstGlyphOfCluster[iGlyphPosition]);
-		}
-
-		delete[] rgFirstGlyphOfCluster;
-		return S_OK;
+	delete[] psva;
+		return hResult;
 	}
 	else {
 //		WRAP_BEGIN(ScriptShapeOpenType, LPFNSCRIPTSHAPEOPENTYPE)

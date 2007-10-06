@@ -23,6 +23,7 @@ __checkReturn HRESULT WINAPI LoggingScriptGetFontProperties(
 	WRAP_BEGIN(ScriptGetFontProperties, LPFNSCRIPTGETFONTPROPERTIES)
 	LOG(L"<ScriptGetFontProperties>");
 	LOG(L"<in>");
+  LogHdc(hdc);
 	LOG(L"</in>");
 	hResult = ScriptGetFontProperties(hdc,psc,sfp);
 	LOG(L"<out>");

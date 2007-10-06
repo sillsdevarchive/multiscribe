@@ -26,7 +26,7 @@ __checkReturn HRESULT WINAPI LoggingScriptGetCMap(
 	WRAP_BEGIN(ScriptGetCMap, LPFNSCRIPTGETCMAP)
 	LOG(L"<ScriptGetCMap>");
 	LOG(L"<in>");
-	LOG(L"<hdc>%d</hdc>", hdc);
+  LogHdc(hdc);
 	LogScriptCache(psc);
 	LogString(pwcInChars, cChars);
 	if(dwFlags & SGCM_RTL){

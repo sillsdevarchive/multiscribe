@@ -34,9 +34,7 @@ __checkReturn HRESULT WINAPI LoggingScriptShape(
 	WRAP_BEGIN(ScriptShape, LPFNSCRIPTSHAPE)
 	LOG(L"<ScriptShape>");
 	LOG(L"<in>");
-	if(hdc){
-		LOG(L"<hdc>%d</hdc>", hdc);
-	}
+  LogHdc(hdc);
 	LogScriptCache(psc);
 	LogString(pwcChars, cChars);
 	LogScriptAnalysis(psa);
@@ -44,20 +42,21 @@ __checkReturn HRESULT WINAPI LoggingScriptShape(
 	LOG(L"</in>");
 	hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
 	LOG(L"<out>");
-	LogScriptAnalysis(psa);
-	LOG(L"<Chars count='%d'>", cChars);
-	for(int i=0;i<cChars;++i){
-		LOG(L"<LogicalCluster>%d</LogicalCluster>", pwLogClust[i]);
-	}
-	LOG(L"</Chars>");
-	LOG(L"<Glyphs count='%d'>", *pcGlyphs);
-	for(int i=0; i<*pcGlyphs;++i){
-		LOG(L"<Glyph hex='%04x'>", pwOutGlyphs[i]);
-		LogScriptVisualAttributes(&psva[i]);
-		LOG(L"</Glyph>");
-	}
-	LOG(L"</Glyphs>");
-
+  if(hResult == S_OK){
+	  LogScriptAnalysis(psa);
+	  LOG(L"<Chars count='%d'>", cChars);
+	  for(int i=0;i<cChars;++i){
+		  LOG(L"<LogicalCluster>%d</LogicalCluster>", pwLogClust[i]);
+	  }
+	  LOG(L"</Chars>");
+	  LOG(L"<Glyphs count='%d'>", *pcGlyphs);
+	  for(int i=0; i<*pcGlyphs;++i){
+		  LOG(L"<Glyph hex='%04x'>", pwOutGlyphs[i]);
+		  LogScriptVisualAttributes(&psva[i]);
+		  LOG(L"</Glyph>");
+	  }
+	  LOG(L"</Glyphs>");
+  }
 	LogHResult(hResult);
 	LOG(L"</out>");
 

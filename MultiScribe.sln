@@ -1,7 +1,12 @@
 
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gusp10", "multiscribe\gusp10.vcproj", "{DF355374-6113-47CB-B72D-3875DECBC825}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "multiscribe", "multiscribe\multiscribe.vcproj", "{DF355374-6113-47CB-B72D-3875DECBC825}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MultiscribeTests", "MultiscribeTests\MultiscribeTests.vcproj", "{2FCB1492-FF0A-470A-8719-6EABC74DE60C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DF355374-6113-47CB-B72D-3875DECBC825} = {DF355374-6113-47CB-B72D-3875DECBC825}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LoggingUsp10", "LoggingUsp10\LoggingUsp10.vcproj", "{2CBA3568-FC5A-4EF7-AD3F-CB4F38738B0B}"
 EndProject
@@ -15,6 +20,10 @@ Global
 		{DF355374-6113-47CB-B72D-3875DECBC825}.Debug|Win32.Build.0 = Debug|Win32
 		{DF355374-6113-47CB-B72D-3875DECBC825}.Release|Win32.ActiveCfg = Release|Win32
 		{DF355374-6113-47CB-B72D-3875DECBC825}.Release|Win32.Build.0 = Release|Win32
+		{2FCB1492-FF0A-470A-8719-6EABC74DE60C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2FCB1492-FF0A-470A-8719-6EABC74DE60C}.Debug|Win32.Build.0 = Debug|Win32
+		{2FCB1492-FF0A-470A-8719-6EABC74DE60C}.Release|Win32.ActiveCfg = Release|Win32
+		{2FCB1492-FF0A-470A-8719-6EABC74DE60C}.Release|Win32.Build.0 = Release|Win32
 		{2CBA3568-FC5A-4EF7-AD3F-CB4F38738B0B}.Debug|Win32.ActiveCfg = Debug|Win32
 		{2CBA3568-FC5A-4EF7-AD3F-CB4F38738B0B}.Debug|Win32.Build.0 = Debug|Win32
 		{2CBA3568-FC5A-4EF7-AD3F-CB4F38738B0B}.Release|Win32.ActiveCfg = Release|Win32

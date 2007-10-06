@@ -57,7 +57,7 @@
 #include <usp10.h>
 #include <assert.h>
 #include <stdio.h>
-#include "stdafx.h"
+//#include "stdafx.h"
 
 #include <GrClient.h> // this should be in GrFeature.h
 #include <GrAppData.h> // this should be in font.h and GrFeature.h

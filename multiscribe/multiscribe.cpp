@@ -99,7 +99,24 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptTextOut(
 	__in_ecount_opt(cGlyphs) const int      *piJustify,     // In     Justified advance widths (optional)
 	__in_ecount(cGlyphs) const GOFFSET      *pGoffset);     // In     x,y offset for combining glyph
 
+__checkReturn HRESULT WINAPI GraphiteEnabledScriptItemize(
+	__in_ecount(cInChars) const WCHAR                   *pwcInChars,    // In   Unicode string to be itemized
+	int                                                 cInChars,       // In   Codepoint count to itemize
+	int                                                 cMaxItems,      // In   Max length of itemization array
+	__in_ecount_opt(1) const SCRIPT_CONTROL             *psControl,     // In   Analysis control (optional)
+	__in_ecount_opt(1) const SCRIPT_STATE               *psState,       // In   Initial bidi algorithm state (optional)
+	__out_ecount_part(cMaxItems, *pcItems) SCRIPT_ITEM  *pItems,        // Out  Array to receive itemization
+	__out_ecount(1) int                                 *pcItems);      // Out  Count of items processed (optional)
 
+__checkReturn HRESULT WINAPI GraphiteEnabledScriptItemizeOpenType(
+	__in_ecount(cInChars) const WCHAR                   *pwcInChars,    // In   Unicode string to be itemized
+	__in                  int                            cInChars,      // In   Codepoint count to itemize
+	__in                  int                            cMaxItems,     // In   Max length of itemization array
+	__in_opt              const SCRIPT_CONTROL          *psControl,     // In   Analysis control (optional)
+	__in_opt              const SCRIPT_STATE            *psState,       // In   Initial bidi algorithm state (optional)
+	__out_ecount_part(cMaxItems, *pcItems) SCRIPT_ITEM  *pItems,        // Out  Array to receive itemization
+	__out_ecount_part(cMaxItems, *pcItems) OPENTYPE_TAG *pScriptTags,   // Out  Array of script tags - parallel to items
+	__out                 int                           *pcItems);      // Out  Count of items processed (optional)
 //void FreeScriptProperties();
 
 //static GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP * gpGraphiteScriptStringAnalysisMap;
@@ -111,6 +128,8 @@ static Interceptor * gpScriptPlaceOpenTypeInterceptor;
 static Interceptor * gpScriptIsComplexInterceptor;
 static Interceptor * gpScriptFreeCacheInterceptor;
 static Interceptor * gpScriptTextOutInterceptor;
+static Interceptor * gpScriptItemizeInterceptor;
+static Interceptor * gpScriptItemizeOpenTypeInterceptor;
 
 static HINSTANCE ghUSP10DLL;
 
@@ -147,6 +166,15 @@ LPVOID GetOriginalScriptFreeCache()
 LPVOID GetOriginalScriptTextOut()
 {
   return gpScriptTextOutInterceptor->GetOriginal();
+}
+
+LPVOID GetOriginalScriptItemize()
+{
+  return gpScriptItemizeInterceptor->GetOriginal();
+}
+LPVOID GetOriginalScriptItemizeOpenType()
+{
+  return gpScriptItemizeOpenTypeInterceptor->GetOriginal();
 }
 
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETPROPERTIES) (
@@ -219,7 +247,9 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			gpScriptIsComplexInterceptor = new Interceptor(ghUSP10DLL, "ScriptIsComplex", &GraphiteEnabledScriptIsComplex);
 			gpScriptFreeCacheInterceptor = new Interceptor(ghUSP10DLL, "ScriptFreeCache", &GraphiteEnabledScriptFreeCache);
 	  gpScriptTextOutInterceptor = new Interceptor(ghUSP10DLL, "ScriptTextOut", &GraphiteEnabledScriptTextOut);
-			break;
+	  gpScriptItemizeInterceptor = new Interceptor(ghUSP10DLL, "ScriptItemize", &GraphiteEnabledScriptItemize);
+	  gpScriptItemizeOpenTypeInterceptor = new Interceptor(ghUSP10DLL, "ScriptItemizeOpenType", &GraphiteEnabledScriptItemizeOpenType);
+	  break;
 		case DLL_PROCESS_DETACH:
 //			delete gpGraphiteScriptStringAnalysisMap;
 			delete gpGlyphPositions;
@@ -231,6 +261,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			delete gpScriptIsComplexInterceptor;
 			delete gpScriptFreeCacheInterceptor;
 	  delete gpScriptTextOutInterceptor;
+	  delete gpScriptItemizeInterceptor;
+	  delete gpScriptItemizeOpenTypeInterceptor;
 			break;
 		case DLL_THREAD_ATTACH:
 			break;
@@ -372,7 +404,7 @@ SetGlyphPositions(LPVOID pSessionKey, LPVOID pKey, GlyphPositions & glyphPositio
 
 void FreeGlyphPositionsForSession(LPVOID pSessionKey)
 {
-	assert(pSessionKey);
+//	assert(pSessionKey);
 	assert(gpGlyphPositions);
 	if(!pSessionKey || !gpGlyphPositions){
 		return;

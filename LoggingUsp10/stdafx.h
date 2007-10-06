@@ -163,3 +163,5 @@ void LogScriptItem(
 	__in_ecount(1) const SCRIPT_ITEM  *pItem);        // In
 
 void LogHResult(HRESULT hResult);
+
+void LogHdc(HDC hdc);

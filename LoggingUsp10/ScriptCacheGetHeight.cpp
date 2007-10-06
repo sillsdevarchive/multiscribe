@@ -20,6 +20,7 @@ __checkReturn HRESULT WINAPI LoggingScriptCacheGetHeight(
 	WRAP_BEGIN(ScriptCacheGetHeight, LPFNSCRIPTCACHEGETHEIGHT)
 	LOG(L"<ScriptCacheGetHeight>");
 	LOG(L"<in>");
+  LogHdc(hdc);
 	LOG(L"</in>");
 	hResult = ScriptCacheGetHeight(hdc,psc,tmHeight);
 	LOG(L"<out>");

@@ -1,3 +1,0 @@
-LIBRARY	usp10.dll
-EXPORTS
-	ScriptGetProperties=GraphiteEnabledScriptGetProperties

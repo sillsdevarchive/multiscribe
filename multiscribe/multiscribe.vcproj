@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="gusp10"
+	Name="multiscribe"
 	ProjectGUID="{DF355374-6113-47CB-B72D-3875DECBC825}"
-	RootNamespace="gusp10"
+	RootNamespace="multiscribe"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\graphite\include&quot;;udis86-1.4"
+				AdditionalIncludeDirectories="&quot;..\lib\graphite\engine\include\graphite&quot;;..\lib\graphite\wrappers\win32;udis86-1.4"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE ;_SCL_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -65,9 +65,9 @@
 				AdditionalDependencies="graphite.lib udis86.lib"
 				OutputFile="$(OutDir)\usp10.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;..\graphite\debug&quot;;&quot;udis86-1.4\libudis86&quot;"
+				AdditionalLibraryDirectories="&quot;..\lib\graphite\engine\debug&quot;;&quot;udis86-1.4\libudis86&quot;"
 				GenerateManifest="true"
-				ModuleDefinitionFile="gusp10.def"
+				ModuleDefinitionFile="multiscribe.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -95,6 +95,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="&quot;$(OutDir)\MultiscribeTests&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -122,7 +123,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;..\graphite\include&quot;;udis86-1.4"
+				AdditionalIncludeDirectories="&quot;..\lib\graphite\engine\include\graphite&quot;;..\lib\graphite\wrappers\win32;udis86-1.4"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE ;_SCL_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -145,8 +146,8 @@
 				AdditionalDependencies="graphite.lib udis86.lib"
 				OutputFile="$(OutDir)\usp10.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;..\graphite\release&quot;;&quot;udis86-1.4\libudis86&quot;"
-				ModuleDefinitionFile="gusp10.def"
+				AdditionalLibraryDirectories="&quot;..\lib\graphite\engine\release&quot;;&quot;udis86-1.4\libudis86&quot;"
+				ModuleDefinitionFile="multiscribe.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -188,15 +189,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\gusp10.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\gusp10.def"
-				>
-			</File>
-			<File
 				RelativePath=".\IsGraphiteFont.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\multiscribe.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\multiscribe.def"
 				>
 			</File>
 			<Filter
@@ -428,7 +429,7 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\gusp10.rc"
+				RelativePath=".\multiscribe.rc"
 				>
 			</File>
 		</Filter>

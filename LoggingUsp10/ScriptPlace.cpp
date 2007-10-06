@@ -32,9 +32,7 @@ __checkReturn HRESULT WINAPI LoggingScriptPlace(
 {
 	WRAP_BEGIN(ScriptPlace, LPFNSCRIPTPLACE)
 	LOG(L"<ScriptPlace>");
-	if(hdc){
-		LOG(L"<hdc>%d</hdc>", hdc);
-	}
+  LogHdc(hdc);
 	LogScriptCache(psc);
 	LOG(L"<Glyphs count='%d'>", cGlyphs);
 	for(int i=0; i<cGlyphs;++i){

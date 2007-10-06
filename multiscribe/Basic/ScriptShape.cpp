@@ -5,9 +5,219 @@
 #include "../TextSource.h"
 #include <utility>
 #include <limits>
+
 LPVOID GetOriginalScriptShape();
+float round(float f){
+  int sign = (f < 0)? -1:1;
+  f*=sign;
+  float fFloored = floor(f);
+  if(f - fFloored < 0.5){
+	return fFloored * sign;
+  }
+  return ceil(f)*sign;
+}
 
+bool IsNko(const WCHAR* sz, int c){
+  for(int i = 0; i != c; ++i){
+	if(0x07C0 <= sz[i] && sz[i] <= 0x07ff){
+	  return true;
+	}
+  }
+  return false;
+}
 
+HRESULT GetGlyphsAndPositions(
+	HDC                                                     hdc,            // In    Optional (see under caching)
+	__deref_inout_ecount(1) SCRIPT_CACHE                    *psc,           // InOut Cache handle
+	__in_ecount(cChars) const WCHAR                         *pwcChars,      // In    Logical unicode run
+	int                                                     cChars,         // In    Length of unicode run
+	int                                                     cMaxGlyphs,     // In    Max glyphs to generate
+	__inout_ecount(1) SCRIPT_ANALYSIS                       *psa,           // InOut Result of ScriptItemize (may have fNoGlyphIndex set)
+	__out_ecount_part(cMaxGlyphs, *pcGlyphs) WORD           *pwOutGlyphs,   // Out   Output glyph buffer
+	__out_ecount_full(cChars) WORD                          *pwLogClust,    // Out   Logical clusters
+	__out_ecount_part(cMaxGlyphs, *pcGlyphs) SCRIPT_VISATTR *psva,          // Out   Visual glyph attributes
+	__out_ecount(1) int                                     *pcGlyphs)     // Out   Count of glyphs generated
+{
+		TextSource textSource(pwcChars, cChars);
+		textSource.setRightToLeft(psa->fRTL);
+
+		// Create the Graphite font object.
+		gr::WinFont font(hdc);
+
+		// Create the segment.
+		gr::LayoutEnvironment layout;
+		layout.setStartOfLine(false);
+		layout.setEndOfLine(false);
+		layout.setDumbFallback(true);	// we want it to try its best, no matter what
+		gr::RangeSegment seg(&font, &textSource, &layout);
+
+		std::pair<gr::GlyphIterator, gr::GlyphIterator> prGlyphIterators = seg.glyphs();
+
+		int cGlyphs = 0;
+		for(gr::GlyphIterator it = prGlyphIterators.first;
+							  it != prGlyphIterators.second;
+							  ++it){
+			++cGlyphs;
+		}
+
+		// if the output buffer length, cMaxGlyphs, is insufficient.
+		if(cGlyphs >  std::max(cMaxGlyphs,0)){
+			return E_OUTOFMEMORY;
+		}
+
+		*pcGlyphs = cGlyphs;
+
+		GlyphPositions glyphPositions;
+		glyphPositions.advanceWidths.resize(cGlyphs);
+		glyphPositions.glyphs.resize(cGlyphs);
+		glyphPositions.goffsets.resize(cGlyphs);
+
+		SetLastScriptShapeTextSource(textSource);
+
+		int * rgFirstGlyphOfCluster = new int [cChars];
+		bool * rgIsClusterStart = new bool [cGlyphs]; //in logical order but the start of a rtl cluster is the last glyph of the cluster
+		int cCharsX, cgidX;
+	seg.getUniscribeClusters(rgFirstGlyphOfCluster,
+											   cChars, &cCharsX,
+							   rgIsClusterStart, *pcGlyphs, &cgidX);
+
+		for(int i=0; i < cChars; ++i){
+	  if(psa->fRTL && !psa->fLogicalOrder){
+		pwLogClust[i] = static_cast<WORD>(cGlyphs - 1 - rgFirstGlyphOfCluster[i]);
+	  }
+	  else {
+		pwLogClust[i] = static_cast<WORD>(rgFirstGlyphOfCluster[i]);
+	  }
+		}
+		delete[] rgFirstGlyphOfCluster;
+
+	float * rgAdvanceWidth = new float[cGlyphs];
+	float * rgOrigin = new float[cGlyphs];
+	bool * rgIsAttached = new bool[cGlyphs];
+	float realXOrigin = 0;
+
+	{
+	gr::GlyphIterator it = prGlyphIterators.first;
+	for(int i = 0; i != cGlyphs; ++i,++it){
+	  rgAdvanceWidth[i] = it->advanceWidth();
+	  rgOrigin[i] = it->origin();
+	  rgIsAttached[i] = it->isAttached();
+
+	  if(psa->fRTL){
+				assert (rgOrigin[i] <= 0);
+				rgOrigin[i] *= -1;
+		rgOrigin[i] -= rgAdvanceWidth[i];
+			}
+
+	  realXOrigin = min<float>(realXOrigin, rgOrigin[i]);
+	}
+	}
+
+	float totalAdvance = realXOrigin;
+
+	float * rgAdvance = new float[cGlyphs];
+	float * rgXOffset = new float[cGlyphs];
+	float * rgTotalAdvance = new float[cGlyphs];
+	for(int i = 0; i != cGlyphs; ++i){
+	  rgTotalAdvance[i] = totalAdvance;
+
+	  if(!psa->fRTL && i != cGlyphs -1 &&
+		rgAdvanceWidth[i] > 0 && rgAdvanceWidth[i+1] > 0
+		&& rgOrigin[i+1]>=rgOrigin[i]){
+		  rgAdvance[i] = rgOrigin[i+1] - rgOrigin[i];
+	  }
+	  else if(psa->fRTL && rgAdvanceWidth[i]!= 0 &&
+		round(rgOrigin[i] - realXOrigin) < round(totalAdvance)){
+		rgAdvance[i] = 0;
+	  }
+	  else {
+		rgAdvance[i] = rgAdvanceWidth[i];
+	  }
+
+	  float xOffset = rgOrigin[i] - totalAdvance + realXOrigin;
+	  if(psa->fRTL && rgAdvance[i] == 0){
+		xOffset+=rgAdvanceWidth[i];
+	  }
+	  rgXOffset[i] = xOffset;
+
+	  totalAdvance += rgAdvance[i];
+	  if(rgAdvanceWidth[i] != 0 && rgXOffset[i]>0){
+		totalAdvance += rgXOffset[i];
+	  }
+	}
+
+	// initialize ClusterEndX positions by logicalGlyphIndex
+	float * rgClusterEndX = new float[cGlyphs];
+
+		int glyphIndex = 0;
+	int logicalGlyphIndex;
+	gr::GlyphIterator it;
+
+	if(psa->fRTL && !psa->fLogicalOrder){
+	  it = prGlyphIterators.second;
+	  logicalGlyphIndex = cGlyphs;
+	}
+	else {
+	  it = prGlyphIterators.first;
+	  logicalGlyphIndex = 0;
+	}
+
+	for(;;){
+	  if(psa->fRTL && !psa->fLogicalOrder){
+		if(it == prGlyphIterators.first) {
+		  break;
+		}
+		--it;
+		--logicalGlyphIndex;
+	  }
+	  else {
+		if(it == prGlyphIterators.second) {
+		  break;
+		}
+	  }
+
+			glyphPositions.glyphs[glyphIndex] = pwOutGlyphs[glyphIndex] = it->glyphID();
+
+		  psva[glyphIndex].fClusterStart = rgIsClusterStart[logicalGlyphIndex];
+	  psva[glyphIndex].fDiacritic = (psva[glyphIndex].fClusterStart)?false:it->isAttached();
+			psva[glyphIndex].fZeroWidth = false; // TODO: when does this need to be set?
+			psva[glyphIndex].uJustification = SCRIPT_JUSTIFY_NONE; //TODO: when does this need to change
+	  psva[glyphIndex].fShapeReserved=0;
+	  psva[glyphIndex].fReserved=0;
+	  float yOffset = it->yOffset();
+	  glyphPositions.goffsets[glyphIndex].dv = static_cast<LONG>((yOffset > 0)?ceil(yOffset):floor(yOffset));  // y offset
+
+	  float xOffset = rgXOffset[logicalGlyphIndex];
+	  glyphPositions.goffsets[glyphIndex].du = static_cast<int>(round(xOffset));
+	  if(psa->fRTL && !psa->fLogicalOrder){
+		glyphPositions.goffsets[glyphIndex].du*=-1;
+	  }
+	  assert(rgAdvance[logicalGlyphIndex] >=0);
+			glyphPositions.advanceWidths[glyphIndex] = static_cast<int>(round(rgAdvance[logicalGlyphIndex]));
+	  if(!(psa->fRTL && !psa->fLogicalOrder)){
+		++it;
+		++logicalGlyphIndex;
+	  }
+	  ++glyphIndex;
+	}
+
+		delete[] rgIsClusterStart;
+	delete[] rgClusterEndX;
+	delete[] rgAdvanceWidth;
+	delete[] rgOrigin;
+
+		//TODO: really the segment should have public properties for
+		// members, m_dxsLeftOverhang, m_dxsRightOverhang and m_dxsVisibleWidth
+		gr::Rect boundingRect = seg.boundingRect();
+		glyphPositions.abc.abcA = static_cast<int>(floor(realXOrigin));//static_cast<int>(ceil(boundingRect.left)); // space to leading edge (may be negative)
+		glyphPositions.abc.abcB = static_cast<UINT>(ceil(seg.advanceWidth())); // drawn portion
+		glyphPositions.abc.abcC = 0; // space to add to trailing edge (may be negative)
+
+		SetGlyphPositions(*psc, psa, glyphPositions);
+
+		//TODO: figure out when we should return USP_E_SCRIPT_NOT_IN_FONT to enable font fallback
+	return S_OK;
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /////   ScriptShape
 
@@ -48,159 +258,14 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 		if(!*psc)
 		{
 			HRESULT hResult = ScriptShape(hdc,psc,pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust, psva,pcGlyphs);
-			if( FAILED(hResult) && hResult != USP_E_SCRIPT_NOT_IN_FONT){
-				return hResult;
+			if( FAILED(hResult) && hResult != USP_E_SCRIPT_NOT_IN_FONT && !(hResult == E_INVALIDARG && IsNko(pwcChars,cChars))){
+				assert(false);
+		return hResult;
 			}
 			FreeGlyphPositionsForSession(*psc);
 		}
 
-		TextSource textSource(pwcChars, cChars);
-		textSource.setRightToLeft(psa->fRTL);
-
-		// Create the Graphite font object.
-		gr::WinFont font(hdc);
-
-		// Create the segment.
-		gr::LayoutEnvironment layout;
-		layout.setStartOfLine(false);
-		layout.setEndOfLine(false);
-		layout.setDumbFallback(true);	// we want it to try its best, no matter what
-		gr::RangeSegment seg(&font, &textSource, &layout);
-
-		std::pair<gr::GlyphIterator, gr::GlyphIterator> prGlyphIterators = seg.glyphs();
-
-		int cGlyphs = 0;
-		for(gr::GlyphIterator it = prGlyphIterators.first;
-							  it != prGlyphIterators.second;
-							  ++it){
-			++cGlyphs;
-		}
-
-		// if the output buffer length, cMaxGlyphs, is insufficient.
-		if(cGlyphs >  std::max(cMaxGlyphs,0)){
-			return E_OUTOFMEMORY;
-		}
-
-		*pcGlyphs = cGlyphs;
-
-		GlyphPositions glyphPositions;
-		glyphPositions.advanceWidths.resize(cGlyphs);
-		glyphPositions.glyphs.resize(cGlyphs);
-		glyphPositions.goffsets.resize(cGlyphs);
-
-		SetLastScriptShapeTextSource(textSource);
-
-		int * rgFirstGlyphOfCluster = new int [cChars];
-		bool * rgIsClusterStart = new bool [cGlyphs];
-		int cCharsX, cgidX;
-	seg.getUniscribeClusters(rgFirstGlyphOfCluster,
-											   cChars, &cCharsX,
-											   rgIsClusterStart, *pcGlyphs, &cgidX);
-
-	float xClusterEnd = 0.0;
-		int i = 0;
-	gr::GlyphIterator it;
-	if(psa->fRTL && !psa->fLogicalOrder){
-	  it = prGlyphIterators.second;
-	}
-	else {
-	  it = prGlyphIterators.first;
-	}
-
-	for(;;){
-	  if(psa->fRTL && !psa->fLogicalOrder){
-		if(it == prGlyphIterators.first) {
-		  break;
-		}
-		--it;
-	  }
-	  else {
-		if(it == prGlyphIterators.second) {
-		  break;
-		}
-	  }
-
-			glyphPositions.glyphs[i] = pwOutGlyphs[i] = it->glyphID();
-
-			psva[i].fClusterStart = rgIsClusterStart[i];
-			psva[i].fDiacritic = (psva[i].fClusterStart)?false:it->isAttached();
-			psva[i].fZeroWidth = false; // TODO: when does this need to be set?
-			psva[i].uJustification = SCRIPT_JUSTIFY_NONE; //TODO: when does this need to change
-
-		glyphPositions.goffsets[i].dv = static_cast<LONG>(ceil(it->yOffset()));  // y offset
-
-	  float xOrigin = it->origin();
-			float advance = it->advanceWidth();
-			if(psa->fRTL && psa->fLogicalOrder){
-				assert (xOrigin <= 0);
-				xOrigin *= -1;
-		xOrigin -= advance;
-			}
-	  if(i>0){
-		glyphPositions.goffsets[i].du = static_cast<int>(floor(xOrigin - xClusterEnd));
-	  }
-	  else {
-		glyphPositions.goffsets[i].du = 0; // sometimes happens that xOrigin is not 0.0 with RTL
-	  }
-			if(it->isAttached()){
-				//The advance width' of a glyph is the movement in the
-				//direction of writing from the starting point for rendering
-				//that glyph to the starting point for rendering the next glyph.
-				//
-				//The origin of each subsequent glyph is offset from that of the
-				//previous glyph by the advance values of the previous glyph.
-				//
-				if(it == it->attachedClusterBase()){
-					//Base glyphs generally have a non-zero advance width
-					//and generally have a glyph offset of (0, 0).
-					advance = it->attachedClusterAdvance();
-					assert(advance >= 0);
-					xClusterEnd += advance;
-				}
-				else {
-					//Combining glyphs generally have a zero advance width and
-					//generally have an offset that places them correctly in
-					//relation to the nearest preceding base glyph.
-		  advance = 0;
-				}
-			}
-			else {
-				xClusterEnd = xOrigin + advance;
-			}
-			glyphPositions.advanceWidths[i] = static_cast<int>(ceil(advance));// should be rounded
-
-	  if(!(psa->fRTL && !psa->fLogicalOrder)){
-		++it;
-	  }
-	   ++i;
-	}
-
-		delete[] rgIsClusterStart;
-
-	int iGlyphPosition;
-		for(int i=0; i < cChars; ++i){
-	  if(psa->fRTL && !psa->fLogicalOrder){
-		iGlyphPosition = cGlyphs - i - 1;
-	  }
-	  else {
-		iGlyphPosition = i;
-	  }
-			pwLogClust[i] = static_cast<WORD>(rgFirstGlyphOfCluster[iGlyphPosition]);
-		}
-
-		delete[] rgFirstGlyphOfCluster;
-
-		//TODO: really the segment should have public properties for
-		// members, m_dxsLeftOverhang, m_dxsRightOverhang and m_dxsVisibleWidth
-		gr::Rect boundingRect = seg.boundingRect();
-		glyphPositions.abc.abcA = static_cast<int>(ceil(boundingRect.left)); // space to leading edge (may be negative)
-		glyphPositions.abc.abcB = static_cast<UINT>(ceil(seg.advanceWidth())); // drawn portion
-		glyphPositions.abc.abcC = 0; // space to add to trailing edge (may be negative)
-
-		SetGlyphPositions(*psc, psa, glyphPositions);
-
-		//TODO: figure out when we should return USP_E_SCRIPT_NOT_IN_FONT to enable font fallback
-		return S_OK;
+	return GetGlyphsAndPositions(hdc, psc, pwcChars,cChars,cMaxGlyphs,psa,pwOutGlyphs,pwLogClust,psva,pcGlyphs);
 	}
 	else
 	{

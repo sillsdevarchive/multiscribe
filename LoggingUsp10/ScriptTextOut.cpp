@@ -42,7 +42,7 @@ __checkReturn HRESULT WINAPI LoggingScriptTextOut(
 	WRAP_BEGIN(ScriptTextOut, LPFNSCRIPTTEXTOUT)
 	LOG(L"<ScriptTextOut>");
 	LOG(L"<in>");
-	LOG(L"<hdc>%d</hdc>", hdc);
+  LogHdc(hdc);
 	LogScriptCache(psc);
 	LOG(L"<Position x='%d' y='%d'/>", x, y);
 	LogExtTextOutOptions(fuOptions);

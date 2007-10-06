@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ITextSource.h>
+
 class TextSource : public gr::IColorTextSource
 {
 private:
@@ -46,21 +48,21 @@ public:
 	{
 		return _sText.length();
 	}
-	size_t fetch(toffset ichMin, size_t cch, gr::utf32 * prgchBuffer)
+  size_t fetch(gr::toffset ichMin, size_t cch, gr::utf32 * prgchBuffer)
 	{
 		throw;
 	}
-	size_t fetch(toffset ichMin, size_t cch, gr::utf16 * prgchwBuffer)
+  size_t fetch(gr::toffset ichMin, size_t cch, gr::utf16 * prgchwBuffer)
 	{
 		size_t ichRet = min(cch, getLength() - ichMin);
 		memcpy(prgchwBuffer, _sText.c_str(), isizeof(gr::utf16) * ichRet);
 		return ichRet;
 	}
-	size_t fetch(toffset ichMin, size_t cch, gr::utf8 * prgchsBuffer)
+  size_t fetch(gr::toffset ichMin, size_t cch, gr::utf8 * prgchsBuffer)
 	{
 		throw;
 	}
-	bool getRightToLeft(toffset ich)
+  bool getRightToLeft(gr::toffset ich)
 	{
 		return _isRightToLeft;
 	}
@@ -69,43 +71,43 @@ public:
 		_isRightToLeft = isRightToLeft;
 	}
 
-	unsigned int getDirectionDepth(toffset ich)
+  unsigned int getDirectionDepth(gr::toffset ich)
 	{
 		return 0;
 	}
-	float getVerticalOffset(toffset ich)
+	float getVerticalOffset(gr::toffset ich)
 	{
 		return 0;
 	}
-	isocode getLanguage(toffset ich)
+  gr::isocode getLanguage(gr::toffset ich)
 	{
 		char lang[4];
 		lang[0] = 'e'; lang[1] = 'n'; lang[2] = 0; lang[3] = 0;
-		isocode ret;
+	gr::isocode ret;
 		memcpy(&ret, lang, 4);
 		return ret;
 	}
-	std::pair<toffset, toffset> gr::ITextSource::propertyRange(toffset ich)
+  std::pair<gr::toffset, gr::toffset> gr::ITextSource::propertyRange(gr::toffset ich)
 	{
-		std::pair<toffset, toffset> pairRet;
+		std::pair<gr::toffset, gr::toffset> pairRet;
 		pairRet.first = 0;
-		pairRet.second = static_cast<toffset>(getLength());
+		pairRet.second = static_cast<gr::toffset>(getLength());
 		return pairRet;
 	}
-	size_t getFontFeatures(toffset ich, gr::FeatureSetting * prgfset)
+	size_t getFontFeatures(gr::toffset ich, gr::FeatureSetting * prgfset)
 	{
 		return 0; // no features in this simple implementation
 	}
-	bool sameSegment(toffset ich1, toffset ich2)
+	bool sameSegment(gr::toffset ich1, gr::toffset ich2)
 	{
 		return true;
 	}
-	void getColors(toffset ich, int * pclrFore, int * pclrBack)
+	void getColors(gr::toffset ich, int * pclrFore, int * pclrBack)
 	{
 		*pclrFore = _foreColor;
 		*pclrBack = _backColor;
 	}
-	void setColors(toffset ich, int clrFore, int clrBack)
+	void setColors(gr::toffset ich, int clrFore, int clrBack)
 	{
 		_foreColor = clrFore;
 		_backColor = clrBack;

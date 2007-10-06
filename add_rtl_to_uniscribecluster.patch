@@ -1,28 +1,41 @@
+Index: src/segment/GrTableManager.cpp
+===================================================================
+--- src/segment/GrTableManager.cpp	(revision 587)
++++ src/segment/GrTableManager.cpp	(working copy)
+@@ -347,7 +347,7 @@
+ 	m_fLogging = (pstrmLog != NULL);
+ 
+ 	int cbPrev;
+-	byte * pbPrevSegDat;
++	byte * pbPrevSegDat=NULL;
+ 	if (psegPrev)
+ 		cbPrev = psegPrev->NextSegInitBuffer(&pbPrevSegDat);
+ 	else if (psegInit)
 Index: src/segment/Segment.cpp
 ===================================================================
---- src/segment/Segment.cpp	(revision 323)
+--- src/segment/Segment.cpp	(revision 587)
 +++ src/segment/Segment.cpp	(working copy)
-@@ -2854,7 +2854,7 @@
+@@ -2848,7 +2848,7 @@
  	//	To skip line-break slots; remember that the number of output slots equals the
  	//	number of gbbs plus initial and/or final line-break slots if any.
  	//	In this case the beginning of the first cluster indicates the first real glyph.
--	int isloutFirstReal = (m_dichwLim) ? visloutBefore[0] : 0;
-+  int isloutFirstReal = (m_dichwLim) ? ((m_fWsRtl)? visloutAfter[0] : visloutBefore[0]) : 0;
+-	int isloutFirstReal = (m_dichwLim) ? ((m_fWsRtl)? visloutAfter[0] : visloutBefore[0]) : 0;
++	int isloutFirstReal = (m_dichwLim) ? visloutBefore[0] : 0;
  
  	//	Kludge to make assertions below easier:
  	if (m_dichwLim > 0)
-@@ -2870,9 +2870,12 @@
+@@ -2864,11 +2864,10 @@
  		// right-to-left situations.
  
  		if (prgiginfFirstOfCluster)
--			prgiginfFirstOfCluster[ich] = LogicalToPhysicalSurface(visloutBefore[ich]);
-+			prgiginfFirstOfCluster[ich] = LogicalToPhysicalSurface(
-+                                      (m_fWsRtl)?visloutAfter[ich]:visloutBefore[ich]);
-+    int clusterStartPos = ((m_fWsRtl)?visloutAfter[ich]:visloutBefore[ich]) - isloutFirstReal;
-+
+-			prgiginfFirstOfCluster[ich]
+-				= LogicalToPhysicalSurface((m_fWsRtl) ? visloutAfter[ich] : visloutBefore[ich]);
+-		int clusterStartPos = ((m_fWsRtl) ? visloutAfter[ich] : visloutBefore[ich]) - isloutFirstReal;
++			prgiginfFirstOfCluster[ich] = LogicalToPhysicalSurface(visloutBefore[ich]);
++		int clusterStartPos = (visloutBefore[ich] - isloutFirstReal);
  		if (pfClusterStart)
--			pfClusterStart[visloutBefore[ich] - isloutFirstReal] = true;
-+			pfClusterStart[clusterStartPos] = true;
+-			pfClusterStart[clusterStartPos] = true;
++      	pfClusterStart[clusterStartPos] = true;
  
  		Assert((visloutBefore[ich] == visloutBefore[ich + 1] &&
  			visloutAfter[ich] == visloutAfter[ich + 1])

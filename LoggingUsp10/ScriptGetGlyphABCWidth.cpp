@@ -22,6 +22,7 @@ __checkReturn HRESULT WINAPI LoggingScriptGetGlyphABCWidth(
 	WRAP_BEGIN(ScriptGetGlyphABCWidth, LPFNSCRIPTGETGLYPHABCWIDTH)
 	LOG(L"<ScriptGetGlyphABCWidth>");
 	LOG(L"<in>");
+  LogHdc(hdc);
 	LOG(L"</in>");
 	hResult = ScriptGetGlyphABCWidth(hdc,psc,wGlyph,pABC);
 	LOG(L"<out>");

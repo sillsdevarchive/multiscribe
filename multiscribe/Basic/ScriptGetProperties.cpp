@@ -44,13 +44,15 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptGetProperties(
 }
 #endif
 
-//SCRIPT_PROPERTIES * GetScriptPropertiesOfEngine(int i){
-//	assert(i > 0 && i < giNumScripts);
-//	if(i > 0 && i < giNumScripts){
-//		return(gppScriptProperties[i]);
-//	}
-//	return NULL;
-//}
+const SCRIPT_PROPERTIES * GetScriptPropertiesOfEngine(int i){
+  const SCRIPT_PROPERTIES** pSpTable;
+  int macScripts;
+  GraphiteEnabledScriptGetProperties(&pSpTable, &macScripts);
+  if(i >= 0 && i < macScripts){
+	return pSpTable[i];
+  }
+  return NULL;
+}
 //
 //int GetGraphiteScriptId(){
 //	return giNumScripts - 1;

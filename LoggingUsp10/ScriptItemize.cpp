@@ -41,8 +41,22 @@ __checkReturn HRESULT WINAPI LoggingScriptItemize(
 	}
 	LOG(L"</in>");
 
-	hResult = ScriptItemize(pwcInChars, cInChars, cMaxItems, psControl, psState, pItems, pcItems);
-	LOG(L"<out>");
+	WCHAR* s = new WCHAR[cInChars];
+  if(pwcInChars != NULL){
+	for(int i = 0; i < cInChars; ++i){
+	  WCHAR w = pwcInChars[i];
+	  if(0x07C0 <= w && w <= 0x07ff) { //N'Ko
+		  w = L'س'; // fool it into thinking we're arabic!
+	  }
+	  s[i] = w;
+	}
+  }
+
+
+	hResult = ScriptItemize(s/*pwcInChars*/, cInChars, cMaxItems, psControl, psState, pItems, pcItems);
+  delete[] s;
+
+  LOG(L"<out>");
 	for(int i= 0; i<*pcItems; ++i){
 		LogScriptItem(&pItems[i]);
 	}

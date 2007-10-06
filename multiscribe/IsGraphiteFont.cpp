@@ -9,3 +9,16 @@ bool IsGraphiteFont(HDC hdc){
 	}
 	return false;
 }
+
+std::wstring FontName(HDC hdc){
+  std::wstring sFontName;
+	assert(hdc);
+	if(hdc){
+	int cw = GetTextFace(hdc,0,NULL);
+	WCHAR * szFontName = new WCHAR[cw];
+	GetTextFace(hdc, cw, szFontName);
+	sFontName = std::wstring(szFontName);
+	delete[] szFontName;
+  }
+  return sFontName;
+}
