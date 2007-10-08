@@ -1,21 +1,8 @@
-Index: src/segment/GrTableManager.cpp
-===================================================================
---- src/segment/GrTableManager.cpp	(revision 587)
-+++ src/segment/GrTableManager.cpp	(working copy)
-@@ -347,7 +347,7 @@
- 	m_fLogging = (pstrmLog != NULL);
- 
- 	int cbPrev;
--	byte * pbPrevSegDat;
-+	byte * pbPrevSegDat=NULL;
- 	if (psegPrev)
- 		cbPrev = psegPrev->NextSegInitBuffer(&pbPrevSegDat);
- 	else if (psegInit)
 Index: src/segment/Segment.cpp
 ===================================================================
---- src/segment/Segment.cpp	(revision 587)
+--- src/segment/Segment.cpp	(revision 715)
 +++ src/segment/Segment.cpp	(working copy)
-@@ -2848,7 +2848,7 @@
+@@ -2863,7 +2863,7 @@
  	//	To skip line-break slots; remember that the number of output slots equals the
  	//	number of gbbs plus initial and/or final line-break slots if any.
  	//	In this case the beginning of the first cluster indicates the first real glyph.
@@ -24,7 +11,7 @@ Index: src/segment/Segment.cpp
  
  	//	Kludge to make assertions below easier:
  	if (m_dichwLim > 0)
-@@ -2864,11 +2864,10 @@
+@@ -2879,9 +2879,8 @@
  		// right-to-left situations.
  
  		if (prgiginfFirstOfCluster)
@@ -34,8 +21,5 @@ Index: src/segment/Segment.cpp
 +			prgiginfFirstOfCluster[ich] = LogicalToPhysicalSurface(visloutBefore[ich]);
 +		int clusterStartPos = (visloutBefore[ich] - isloutFirstReal);
  		if (pfClusterStart)
--			pfClusterStart[clusterStartPos] = true;
-+      	pfClusterStart[clusterStartPos] = true;
+ 			pfClusterStart[clusterStartPos] = true;
  
- 		Assert((visloutBefore[ich] == visloutBefore[ich + 1] &&
- 			visloutAfter[ich] == visloutAfter[ich + 1])

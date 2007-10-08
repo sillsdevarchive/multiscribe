@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(SolutionDir)lib\UnitTest++\UnitTest++.vsnet2005.lib&quot; usp10.lib"
+				AdditionalDependencies="&quot;$(SolutionDir)lib\UnitTest++\debug\UnitTest++.vsnet2005.lib&quot; usp10.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -140,7 +140,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(SolutionDir)lib\UnitTest++\UnitTest++.vsnet2005.lib&quot; usp10.lib"
+				AdditionalDependencies="&quot;$(SolutionDir)lib\UnitTest++\release\UnitTest++.vsnet2005.lib&quot; usp10.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"

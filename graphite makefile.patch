@@ -1,0 +1,22 @@
+Index: makefile.vc
+===================================================================
+--- makefile.vc	(revision 666)
++++ makefile.vc	(working copy)
+@@ -2,7 +2,7 @@
+ TARGET=graphite
+ 
+ CPP=cl.exe
+-CPPFLAGS=/nologo /W4 /GR /GX /I "./src/font" /I "./src/painter" /I "./src/segment" /I "./src/textsource" /I "./src/generic" /I "./include/graphite" /I "../wrappers/win32" /D "GR_NAMESPACE" /D "WIN32" /D "_WINDOWS" /D "_UNICODE" /D "UNICODE" /D "TRACING"  /Fp"$(INTDIR)\graphite.pch" /YX /Fd"$(INTDIR)\\" /FD /c
++CPPFLAGS=/Zc:wchar_t- /nologo /W4 /GR /EHsc /I "./src/font" /I "./src/painter" /I "./src/segment" /I "./src/textsource" /I "./src/generic" /I "./include/graphite" /I "../wrappers/win32" /D "GR_NAMESPACE" /D "WIN32" /D "_WINDOWS" /D "_UNICODE" /D "UNICODE" /D "TRACING" /D "_SCL_SECURE_NO_DEPRECATE" /Fp"$(INTDIR)\graphite.pch" /Fd"$(INTDIR)\\" /FD /c
+ 
+ LINK=link.exe
+ LINK_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib /nologo /dll /pdb:"$(OUTDIR)\\graphite.pdb" /machine:I386 /out:"$(OUTDIR)\\$(TARGET).dll" /implib:"$(OUTDIR)\\$(TARGET).lib"
+@@ -23,7 +23,7 @@
+ SBREXT = .sbr
+ 
+ !IF "$(CFG)" == "DEBUG"
+-CPP_DEBUG=/D "DEBUG" /Gm /GR /ZI /Od /GZ /FR"$(INTDIR)\\" /$(MLIB)d
++CPP_DEBUG=/D "DEBUG" /Gm /GR /ZI /Od /RTC1 /FR"$(INTDIR)\\" /$(MLIB)d
+ # CPP_DEBUG=/D "DEBUG" /Gm /GR /ZI /Od /GZ /FR"$(INTDIR)\\" /MDd
+ 
+ OUTDIR=.\debug
