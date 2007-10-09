@@ -1,5 +1,6 @@
+#pragma comment(linker, "/export:ScriptItemizeOpenType=_usp10.ScriptItemizeOpenType")
+#ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
 #include "../stdafx.h"
-//#pragma comment(linker, "/export:ScriptItemizeOpenType=_usp10.ScriptItemizeOpenType")
 
 LPVOID GetOriginalScriptItemizeOpenType();
 
@@ -51,3 +52,5 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptItemizeOpenType(
 //#ifdef __cplusplus
 //}
 //#endif
+
+#endif

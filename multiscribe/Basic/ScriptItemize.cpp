@@ -1,3 +1,7 @@
+#pragma comment(linker, "/export:ScriptItemize=_usp10.ScriptItemize")
+
+#ifdef INTERCEPT_SCRIPTITEMIZE
+
 #include "../stdafx.h"
 //int GetGraphiteScriptId();
 const SCRIPT_PROPERTIES * GetScriptPropertiesOfEngine(int i);
@@ -5,7 +9,6 @@ LPVOID GetOriginalScriptItemize();
 
 static WORD eScriptArabic = (WORD)-1;
 
-#pragma comment(linker, "/export:ScriptItemize=_usp10.ScriptItemize")
 
 //////////////////////////////////////////////////////////////////////////////////////
 ///   ScriptItemize
@@ -95,3 +98,6 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptItemize(
 //#ifdef __cplusplus
 //}
 //#endif
+
+
+#endif

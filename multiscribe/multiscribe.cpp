@@ -99,6 +99,8 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptTextOut(
 	__in_ecount_opt(cGlyphs) const int      *piJustify,     // In     Justified advance widths (optional)
 	__in_ecount(cGlyphs) const GOFFSET      *pGoffset);     // In     x,y offset for combining glyph
 
+#ifdef INTERCEPT_SCRIPTITEMIZE
+
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptItemize(
 	__in_ecount(cInChars) const WCHAR                   *pwcInChars,    // In   Unicode string to be itemized
 	int                                                 cInChars,       // In   Codepoint count to itemize
@@ -107,6 +109,9 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptItemize(
 	__in_ecount_opt(1) const SCRIPT_STATE               *psState,       // In   Initial bidi algorithm state (optional)
 	__out_ecount_part(cMaxItems, *pcItems) SCRIPT_ITEM  *pItems,        // Out  Array to receive itemization
 	__out_ecount(1) int                                 *pcItems);      // Out  Count of items processed (optional)
+#endif
+
+#ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
 
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptItemizeOpenType(
 	__in_ecount(cInChars) const WCHAR                   *pwcInChars,    // In   Unicode string to be itemized
@@ -117,6 +122,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptItemizeOpenType(
 	__out_ecount_part(cMaxItems, *pcItems) SCRIPT_ITEM  *pItems,        // Out  Array to receive itemization
 	__out_ecount_part(cMaxItems, *pcItems) OPENTYPE_TAG *pScriptTags,   // Out  Array of script tags - parallel to items
 	__out                 int                           *pcItems);      // Out  Count of items processed (optional)
+#endif
 //void FreeScriptProperties();
 
 //static GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP * gpGraphiteScriptStringAnalysisMap;
@@ -128,9 +134,12 @@ static Interceptor * gpScriptPlaceOpenTypeInterceptor;
 static Interceptor * gpScriptIsComplexInterceptor;
 static Interceptor * gpScriptFreeCacheInterceptor;
 static Interceptor * gpScriptTextOutInterceptor;
+#ifdef INTERCEPT_SCRIPTITEMIZE
 static Interceptor * gpScriptItemizeInterceptor;
+#endif
+#ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
 static Interceptor * gpScriptItemizeOpenTypeInterceptor;
-
+#endif
 static HINSTANCE ghUSP10DLL;
 
 LPVOID GetOriginalScriptShape()
@@ -168,14 +177,19 @@ LPVOID GetOriginalScriptTextOut()
   return gpScriptTextOutInterceptor->GetOriginal();
 }
 
+#ifdef INTERCEPT_SCRIPTITEMIZE
 LPVOID GetOriginalScriptItemize()
 {
   return gpScriptItemizeInterceptor->GetOriginal();
 }
+#endif
+
+#ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
 LPVOID GetOriginalScriptItemizeOpenType()
 {
   return gpScriptItemizeOpenTypeInterceptor->GetOriginal();
 }
+#endif
 
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETPROPERTIES) (
 	__deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,        // Out  Receives pointer to table of pointers to properties indexed by script
@@ -247,8 +261,12 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			gpScriptIsComplexInterceptor = new Interceptor(ghUSP10DLL, "ScriptIsComplex", &GraphiteEnabledScriptIsComplex);
 			gpScriptFreeCacheInterceptor = new Interceptor(ghUSP10DLL, "ScriptFreeCache", &GraphiteEnabledScriptFreeCache);
 	  gpScriptTextOutInterceptor = new Interceptor(ghUSP10DLL, "ScriptTextOut", &GraphiteEnabledScriptTextOut);
+#ifdef INTERCEPT_SCRIPTITEMIZE
 	  gpScriptItemizeInterceptor = new Interceptor(ghUSP10DLL, "ScriptItemize", &GraphiteEnabledScriptItemize);
+#endif
+#ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
 	  gpScriptItemizeOpenTypeInterceptor = new Interceptor(ghUSP10DLL, "ScriptItemizeOpenType", &GraphiteEnabledScriptItemizeOpenType);
+#endif
 	  break;
 		case DLL_PROCESS_DETACH:
 //			delete gpGraphiteScriptStringAnalysisMap;
@@ -261,9 +279,13 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			delete gpScriptIsComplexInterceptor;
 			delete gpScriptFreeCacheInterceptor;
 	  delete gpScriptTextOutInterceptor;
+#ifdef INTERCEPT_SCRIPTITEMIZE
 	  delete gpScriptItemizeInterceptor;
+#endif
+#ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
 	  delete gpScriptItemizeOpenTypeInterceptor;
-			break;
+#endif
+	  break;
 		case DLL_THREAD_ATTACH:
 			break;
 		case DLL_THREAD_DETACH:
