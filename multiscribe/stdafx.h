@@ -72,6 +72,8 @@
 #include <WinSegmentPainter.h>
 #include <ITextSource.h>
 
+#include <math.h>
+
 //#if USPBUILD <= 0400
 typedef ULONG OPENTYPE_TAG;
 
@@ -135,3 +137,5 @@ bool IsGraphiteFont(HDC hdc);
 
 #define WRAP_END_RETURNING(return_variable_name, error_return_value) \
 	WRAP_END_FINAL_RETURNING(return_variable_name, error_return_value)
+
+float round(float f);

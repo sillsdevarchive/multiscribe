@@ -6,6 +6,16 @@
 #include "GlyphsToTextSourceMap.h"
 #include "interceptor.h"
 
+float round(float f){
+  int sign = (f < 0)? -1:1;
+  f*=sign;
+  float fFloored = floor(f);
+  if(f - fFloored < 0.5){
+	return fFloored * sign;
+  }
+  return ceil(f)*sign;
+}
+
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 	HDC                                         hdc,        // In    Optional (see under caching)
 	__deref_inout_ecount(1) SCRIPT_CACHE        *psc,       // InOut Cache handle

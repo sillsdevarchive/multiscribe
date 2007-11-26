@@ -71,12 +71,12 @@ BEGIN
 		BEGIN
 			VALUE "Comments", "Rename original usp10.dll to _usp10.dll and put this file (usp10.dll) in its place"
 			VALUE "FileDescription", "Multiscribe - a graphite wrapper around Uniscribe"
-			VALUE "FileVersion", "0, 2007, 10, 9"
+			VALUE "FileVersion", "0, 2007, 11, 26"
 			VALUE "InternalName", "multiscribe"
 			VALUE "LegalCopyright", "Copyright (C) 2007"
 			VALUE "OriginalFilename", "multiscribe"
 			VALUE "ProductName", "Multiscribe - a graphite wrapper around Uniscribe"
-			VALUE "ProductVersion", "0, 2007, 10, 9"
+			VALUE "ProductVersion", "0, 2007, 11, 26"
 		END
 	END
 	BLOCK "VarFileInfo"

@@ -123,6 +123,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="&quot;..\lib\graphite\engine\include\graphite&quot;;..\lib\graphite\wrappers\win32;..\lib\udis86-1.4"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE ;_SCL_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="0"

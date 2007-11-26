@@ -7,15 +7,6 @@
 #include <limits>
 
 LPVOID GetOriginalScriptShape();
-float round(float f){
-  int sign = (f < 0)? -1:1;
-  f*=sign;
-  float fFloored = floor(f);
-  if(f - fFloored < 0.5){
-	return fFloored * sign;
-  }
-  return ceil(f)*sign;
-}
 
 bool IsNko(const WCHAR* sz, int c){
   for(int i = 0; i != c; ++i){
@@ -205,6 +196,10 @@ HRESULT GetGlyphsAndPositions(
 	delete[] rgClusterEndX;
 	delete[] rgAdvanceWidth;
 	delete[] rgOrigin;
+	delete[] rgIsAttached;
+	delete[] rgAdvance;
+	delete[] rgXOffset;
+	delete[] rgTotalAdvance;
 
 		//TODO: really the segment should have public properties for
 		// members, m_dxsLeftOverhang, m_dxsRightOverhang and m_dxsVisibleWidth
