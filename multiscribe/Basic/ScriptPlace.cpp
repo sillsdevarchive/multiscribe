@@ -8,18 +8,16 @@ LPVOID GetOriginalScriptPlace();
 
 // ScriptPlace may be called twice for every ScriptShape but with a different device context
 // (screen verses printer).
-HRESULT GetPositions(
+HRESULT GetPositions(TextSource & textSource,
 	HDC                                                     hdc,            // In    Optional (see under caching)
 	__deref_inout_ecount(1) SCRIPT_CACHE                    *psc,           // InOut Cache handle
 	__in_ecount(cGlyphs) const WORD             *pwGlyphs,  // In    Glyph buffer from prior ScriptShape call
 	int                                         cGlyphs,    // In    Number of glyphs
-	__in_ecount(cGlyphs) const SCRIPT_VISATTR   *psva,      // In    Visual glyph attributes
 	__inout_ecount(1) SCRIPT_ANALYSIS           *psa,       // InOut Result of ScriptItemize (may have fNoGlyphIndex set)
 	__out_ecount_full(cGlyphs) int              *piAdvance, // Out   Advance wdiths
 	__out_ecount_full_opt(cGlyphs) GOFFSET      *pGoffset,  // Out   x,y offset for combining glyph
 	__out_ecount(1) ABC                         *pABC)      // Out   Composite ABC for the whole run (Optional)
 {
-	TextSource textSource(GetLastScriptShapeTextSource());
 
 	// Create the Graphite font object.
 	gr::WinFont font(hdc);
@@ -180,29 +178,29 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 	if(!hdc && !*psc){
 		return E_PENDING;
 	}
-	LPFNSCRIPTPLACE ScriptPlace = (LPFNSCRIPTPLACE) GetOriginalScriptPlace();
 
 	GlyphPositions * pGlyphPositions = NULL;
-  if(*psc){
-	pGlyphPositions = GetGlyphPositions(*psc, psa, pwGlyphs, cGlyphs);
-  }
-  if(!pGlyphPositions){
-	// maybe it couldn't find it because a different hdc/psc was used from the ScriptShape
-	// if that's the case lets see if the glyphs we've been given were the same as came out
-	// of the last ScriptShape call
-
-	if(cGlyphs == static_cast<int>(GetLastScriptShapeGlyphs().size()) &&
-		std::equal(GetLastScriptShapeGlyphs().begin(),
-				   GetLastScriptShapeGlyphs().end(),
-				   pwGlyphs)){
-		if(!hdc){
-			return E_PENDING;
-		}
-	  if(IsGraphiteFont(hdc)){
-		  return GetPositions(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
-	  }
+	if(*psc){
+		pGlyphPositions = GetGlyphPositions(*psc, psa, pwGlyphs, cGlyphs);
 	}
-  }
+	if(!pGlyphPositions){
+		// maybe it couldn't find it because a different hdc/psc was used from the ScriptShape
+		// if that's the case lets see if the glyphs we've been given were the same as came out
+		// of the last ScriptShape call
+
+		if(cGlyphs == static_cast<int>(GetLastScriptShapeGlyphs().size()) &&
+			std::equal(GetLastScriptShapeGlyphs().begin(),
+					   GetLastScriptShapeGlyphs().end(),
+					   pwGlyphs)){
+			if(!hdc){
+				return E_PENDING;
+			}
+			if(IsGraphiteFont(hdc)){
+				TextSource textSource(GetLastScriptShapeTextSource());
+				return GetPositions(textSource, hdc, psc, pwGlyphs, cGlyphs, psa, piAdvance, pGoffset, pABC);
+			}
+		}
+	}
 
 	if(pGlyphPositions)
 	{
@@ -220,6 +218,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 		return S_OK;
 	}
 	else {
+		LPFNSCRIPTPLACE ScriptPlace = (LPFNSCRIPTPLACE) GetOriginalScriptPlace();
 		return ScriptPlace(hdc, psc, pwGlyphs, cGlyphs, psva, psa, piAdvance, pGoffset, pABC);
 	}
 }

@@ -1,22 +1,22 @@
 #pragma comment(linker, "/export:ScriptPlaceOpenType=_usp10.ScriptPlaceOpenType")
 
-#include <math.h>
 #include "../stdafx.h"
 #include "../GlyphsToTextSourceMap.h"
 #include "../TextSource.h"
 
 LPVOID GetOriginalScriptPlaceOpenType();
-__checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
-	HDC                                         hdc,        // In    Optional (see under caching)
-	__deref_inout_ecount(1) SCRIPT_CACHE        *psc,       // InOut Cache handle
+
+HRESULT GetPositions(
+	TextSource & textSource,
+	HDC                                                     hdc,            // In    Optional (see under caching)
+	__deref_inout_ecount(1) SCRIPT_CACHE                    *psc,           // InOut Cache handle
 	__in_ecount(cGlyphs) const WORD             *pwGlyphs,  // In    Glyph buffer from prior ScriptShape call
 	int                                         cGlyphs,    // In    Number of glyphs
-	__in_ecount(cGlyphs) const SCRIPT_VISATTR   *psva,      // In    Visual glyph attributes
 	__inout_ecount(1) SCRIPT_ANALYSIS           *psa,       // InOut Result of ScriptItemize (may have fNoGlyphIndex set)
 	__out_ecount_full(cGlyphs) int              *piAdvance, // Out   Advance wdiths
 	__out_ecount_full_opt(cGlyphs) GOFFSET      *pGoffset,  // Out   x,y offset for combining glyph
-	__out_ecount(1) ABC                         *pABC)      // Out   Composite ABC for the whole run (Optional)
-;
+	__out_ecount(1) ABC                         *pABC);      // Out   Composite ABC for the whole run (Optional)
+
 /// ScriptPlaceOpenType
 
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTPLACEOPENTYPE)(
@@ -72,10 +72,25 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 	__out_ecount_full(cGlyphs) GOFFSET                *pGoffset,       // Out   x,y offset for combining glyph
 	__out_opt                  ABC                    *pABC)          // Out   Composite ABC for the whole run (Optional)
 {
+	if(!hdc && !*psc){
+		return E_PENDING;
+	}
+
 	GlyphPositions * pGlyphPositions = NULL;
-  if(*psc){
-	pGlyphPositions = GetGlyphPositions(*psc, psa, pwGlyphs, cGlyphs);
-  }
+	if(*psc){
+		pGlyphPositions = GetGlyphPositions(*psc, psa, pwGlyphs, cGlyphs);
+	}
+	if(!pGlyphPositions){
+		if(!hdc){
+			return E_PENDING;
+		}
+		if(IsGraphiteFont(hdc)){
+			TextSource textSource(pwcChars, cChars);
+			textSource.setRightToLeft(psa->fRTL);
+			return GetPositions(textSource, hdc, psc, pwGlyphs, cGlyphs, psa, piAdvance, pGoffset, pABC);
+		}
+	}
+
 	if(pGlyphPositions)
 	{
 		for(int i = 0; i < cGlyphs; ++i){
@@ -92,10 +107,8 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 		return S_OK;
 	}
 	else {
-	LPFNSCRIPTPLACEOPENTYPE ScriptPlaceOpenType = (LPFNSCRIPTPLACEOPENTYPE) GetOriginalScriptPlaceOpenType();
-
-		HRESULT hResult = ScriptPlaceOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,pwLogClust,pCharProps,cChars,pwGlyphs,pGlyphProps,cGlyphs,piAdvance,pGoffset,pABC);
-	return hResult;
+		LPFNSCRIPTPLACEOPENTYPE ScriptPlaceOpenType = (LPFNSCRIPTPLACEOPENTYPE) GetOriginalScriptPlaceOpenType();
+		return ScriptPlaceOpenType(hdc,psc,psa,tagScript,tagLangSys,rcRangeChars,rpRangeProperties,cRanges,pwcChars,pwLogClust,pCharProps,cChars,pwGlyphs,pGlyphProps,cGlyphs,piAdvance,pGoffset,pABC);
 	}
 }
 
