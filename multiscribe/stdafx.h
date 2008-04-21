@@ -57,6 +57,7 @@
 #include <usp10.h>
 #include <assert.h>
 #include <stdio.h>
+#include <string>
 //#include "stdafx.h"
 
 #include <GrClient.h> // this should be in GrFeature.h

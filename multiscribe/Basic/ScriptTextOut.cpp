@@ -57,13 +57,13 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptTextOut(
 	const_cast<SCRIPT_ANALYSIS *>(psa)->eScript = SCRIPT_UNDEFINED; // it seems that the script engine's text out may be trying to do special things especially in the case of arabic
 
 #if defined(COLORIZED)
-		OriginalColor = SetTextColor(hdc, RGB(0,128,0));
+		OriginalColor = SetTextColor(hdc, RGB(0,128,0));	// dark green = Graphite font
 #endif
   }
 #if defined(COLORIZED)
 	else
 	{
-		OriginalColor = SetTextColor(hdc, RGB(0,255,0));
+		OriginalColor = SetTextColor(hdc, RGB(0,255,0));	// bright green = non-Graphite font
 	}
 #endif
 
