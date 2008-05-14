@@ -27,7 +27,7 @@ HRESULT GetGlyphsAndPositions(
 	__out_ecount_part(cMaxGlyphs, *pcGlyphs) WORD           *pwOutGlyphs,   // Out   Output glyph buffer
 	__out_ecount_full(cChars) WORD                          *pwLogClust,    // Out   Logical clusters
 	__out_ecount_part(cMaxGlyphs, *pcGlyphs) SCRIPT_VISATTR *psva,          // Out   Visual glyph attributes
-	__out_ecount(1) int                                     *pcGlyphs)     // Out   Count of glyphs generated
+	__out_ecount(1) int                                     *pcGlyphs)      // Out   Count of glyphs generated
 {
 	TextSource textSource(pwcChars, cChars);
 	textSource.setRightToLeft(psa->fRTL);
@@ -50,9 +50,10 @@ HRESULT GetGlyphsAndPositions(
 						  ++it) {
 		++cGlyphs;
 	}
+	assert(cGlyphs == (prGlyphIterators.second - prGlyphIterators.first));
 
 	// if the output buffer length, cMaxGlyphs, is insufficient.
-	if(cGlyphs >  std::max(cMaxGlyphs,0)){
+	if (cGlyphs >  std::max(cMaxGlyphs,0)) {
 		return E_OUTOFMEMORY;
 	}
 
@@ -74,11 +75,14 @@ HRESULT GetGlyphsAndPositions(
 	seg.getUniscribeClusters(rgFirstGlyphOfCluster, cChars, &cCharsX,
 						rgIsClusterStart, *pcGlyphs, &cgidX);
 
-	for ( int i = 0; i < cChars; ++i) {
-		if (psa->fRTL && !psa->fLogicalOrder) {
+	for ( int i = 0; i < cChars; ++i)
+	{
+		if (psa->fRTL && !psa->fLogicalOrder)
+		{
 			pwLogClust[i] = static_cast<WORD>(cGlyphs - 1 - rgFirstGlyphOfCluster[i]);
 		}
-		else {
+		else
+		{
 			pwLogClust[i] = static_cast<WORD>(rgFirstGlyphOfCluster[i]);
 		}
 	}
@@ -90,6 +94,7 @@ HRESULT GetGlyphsAndPositions(
 	float * rgOrigin = new float[cGlyphs];
 	bool * rgIsAttached = new bool[cGlyphs];
 	float realXOrigin = 0;
+	float segWidth = seg.advanceWidth();
 
 	{
 		gr::GlyphIterator it = prGlyphIterators.first;
@@ -99,7 +104,9 @@ HRESULT GetGlyphsAndPositions(
 			rgIsAttached[i] = it->isAttached();
 
 			if (psa->fRTL) {
-				assert (rgOrigin[i] <= 0);
+				// Put all glyphs in left-to-right order.
+				rgOrigin[i] -= segWidth;
+				assert(rgOrigin[i] <= 0);
 				rgOrigin[i] *= -1;
 				rgOrigin[i] -= rgAdvanceWidth[i];
 			}
@@ -107,37 +114,41 @@ HRESULT GetGlyphsAndPositions(
 		}
 	}
 
-	float totalAdvance = realXOrigin;
+	float advanceSoFar = realXOrigin;
 
 	float * rgAdvance = new float[cGlyphs];
 	float * rgXOffset = new float[cGlyphs];
 	float * rgTotalAdvance = new float[cGlyphs];
-	for (int i = 0; i != cGlyphs; ++i) {
-		rgTotalAdvance[i] = totalAdvance;
+	for (int i = 0; i != cGlyphs; ++i)
+	{
+		rgTotalAdvance[i] = advanceSoFar;
 
-		if (!psa->fRTL && i != cGlyphs -1
+		if (!psa->fRTL && i != cGlyphs - 1
 				&& rgAdvanceWidth[i] > 0 && rgAdvanceWidth[i+1] > 0
-				&& rgOrigin[i+1]>=rgOrigin[i])
+				&& rgOrigin[i+1] >= rgOrigin[i])
 		{
 			rgAdvance[i] = rgOrigin[i+1] - rgOrigin[i];
 		}
-		else if(psa->fRTL && rgAdvanceWidth[i]!= 0
-				&& round(rgOrigin[i] - realXOrigin) < round(totalAdvance)) {
+		else if (psa->fRTL && rgAdvanceWidth[i] != 0
+				&& round(rgOrigin[i] - realXOrigin) < round(advanceSoFar))
+		{
 			rgAdvance[i] = 0;
 		}
 		else {
 			rgAdvance[i] = rgAdvanceWidth[i];
 		}
 
-		float xOffset = rgOrigin[i] - totalAdvance + realXOrigin;
-		if (psa->fRTL && rgAdvance[i] == 0) {
-			xOffset+=rgAdvanceWidth[i];
+		float xOffset = rgOrigin[i] - advanceSoFar + realXOrigin;
+		if (psa->fRTL && rgAdvance[i] == 0)
+		{
+			xOffset += rgAdvanceWidth[i];
 		}
 		rgXOffset[i] = xOffset;
 
-		totalAdvance += rgAdvance[i];
-		if (rgAdvanceWidth[i] != 0 && rgXOffset[i] > 0) {
-			totalAdvance += rgXOffset[i];
+		advanceSoFar += rgAdvance[i];
+		if (rgAdvanceWidth[i] != 0 && rgXOffset[i] > 0)
+		{
+			advanceSoFar += rgXOffset[i];
 		}
 	}
 
@@ -174,18 +185,18 @@ HRESULT GetGlyphsAndPositions(
 		glyphPositions.glyphs[glyphIndex] = pwOutGlyphs[glyphIndex] = it2->glyphID();
 
 		psva[glyphIndex].fClusterStart = rgIsClusterStart[logicalGlyphIndex];
-		psva[glyphIndex].fDiacritic = (psva[glyphIndex].fClusterStart)?false:it2->isAttached();
+		psva[glyphIndex].fDiacritic = (psva[glyphIndex].fClusterStart) ? false : it2->isAttached();
 		psva[glyphIndex].fZeroWidth = false; // TODO: when does this need to be set?
 		psva[glyphIndex].uJustification = SCRIPT_JUSTIFY_NONE; //TODO: when does this need to change
 		psva[glyphIndex].fShapeReserved=0;
 		psva[glyphIndex].fReserved=0;
 		float yOffset = it2->yOffset();
-		glyphPositions.goffsets[glyphIndex].dv = static_cast<LONG>((yOffset > 0)?ceil(yOffset):floor(yOffset));  // y offset
+		glyphPositions.goffsets[glyphIndex].dv = static_cast<LONG>((yOffset > 0) ? ceil(yOffset) : floor(yOffset));  // y offset
 
 		float xOffset = rgXOffset[logicalGlyphIndex];
 		glyphPositions.goffsets[glyphIndex].du = static_cast<int>(round(xOffset));
 		if (psa->fRTL && !psa->fLogicalOrder) {
-			glyphPositions.goffsets[glyphIndex].du*=-1;
+			glyphPositions.goffsets[glyphIndex].du *= -1;
 		}
 		assert(rgAdvance[logicalGlyphIndex] >=0);
 		glyphPositions.advanceWidths[glyphIndex] = static_cast<int>(round(rgAdvance[logicalGlyphIndex]));
@@ -208,7 +219,7 @@ HRESULT GetGlyphsAndPositions(
 	// TODO: really the segment should have public properties for
 	// members, m_dxsLeftOverhang, m_dxsRightOverhang and m_dxsVisibleWidth
 	gr::Rect boundingRect = seg.boundingRect();
-	glyphPositions.abc.abcA = static_cast<int>(floor(realXOrigin));//static_cast<int>(ceil(boundingRect.left)); // space to leading edge (may be negative)
+	glyphPositions.abc.abcA = static_cast<int>(floor(realXOrigin)); //static_cast<int>(ceil(boundingRect.left)); // space to leading edge (may be negative)
 	glyphPositions.abc.abcB = static_cast<UINT>(ceil(seg.advanceWidth())); // drawn portion
 	glyphPositions.abc.abcC = 0; // space to add to trailing edge (may be negative)
 

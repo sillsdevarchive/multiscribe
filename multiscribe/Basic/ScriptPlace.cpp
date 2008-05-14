@@ -35,6 +35,7 @@ HRESULT GetPositions(TextSource & textSource,
 	float * rgOrigin = new float[cGlyphs];
 	bool * rgIsAttached = new bool[cGlyphs];
 	float realXOrigin = 0;
+	float segWidth = seg.advanceWidth();
 
 	{
 		gr::GlyphIterator it = prGlyphIterators.first;
@@ -44,6 +45,8 @@ HRESULT GetPositions(TextSource & textSource,
 		  rgIsAttached[i] = it->isAttached();
 
 		  if(psa->fRTL){
+			// Put all glyphs in left-to-right order.
+			rgOrigin[i] -= segWidth;
 			assert (rgOrigin[i] <= 0);
 			rgOrigin[i] *= -1;
 			rgOrigin[i] -= rgAdvanceWidth[i];

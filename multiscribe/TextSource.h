@@ -73,7 +73,7 @@ public:
 
   unsigned int getDirectionDepth(gr::toffset ich)
 	{
-		return 0;
+		return (_isRightToLeft ? 1 : 0);
 	}
 	float getVerticalOffset(gr::toffset ich)
 	{

@@ -393,7 +393,7 @@ GetGlyphPositions(LPVOID pSessionKey, LPVOID pKey,
 	assert(pSessionKey);
 	assert(pKey);
 	assert(gpGlyphPositions);
-  assert(pGlyphs);
+	assert(pGlyphs);
 
 	if(!pSessionKey || !pKey || !gpGlyphPositions || !pGlyphs){
 		return NULL;
@@ -403,21 +403,22 @@ GetGlyphPositions(LPVOID pSessionKey, LPVOID pKey,
 
 	GLYPHPOSITIONS_MAP::iterator it;
 	it = glyphPositionsMap.find(pKey);
-	if(it == glyphPositionsMap.end()){
+	if (it == glyphPositionsMap.end()) {
 		return NULL;
 	}
 
-  if(static_cast<int>(it->second.glyphs.size()) == cGlyphs &&
-	std::equal(it->second.glyphs.begin(),
+	if (static_cast<int>(it->second.glyphs.size()) == cGlyphs
+		&& std::equal(it->second.glyphs.begin(),
 				it->second.glyphs.end(),
-				pGlyphs)){
-	  GlyphPositions* pTextSource = &it->second;
-	  return pTextSource;
-  }
+				pGlyphs))
+	{
+		GlyphPositions* pTextSource = &it->second;
+		return pTextSource;
+	}
 
-  // old cache
-  glyphPositionsMap.erase(it);
-  return NULL;
+	// old cache
+	glyphPositionsMap.erase(it);
+	return NULL;
 }
 
 void
@@ -426,19 +427,19 @@ SetGlyphPositions(LPVOID pSessionKey, LPVOID pKey, GlyphPositions & glyphPositio
 	assert(pSessionKey);
 	assert(pKey);
 	assert(gpGlyphPositions);
-	if(!pSessionKey || !pKey || !gpGlyphPositions){
+	if (!pSessionKey || !pKey || !gpGlyphPositions) {
 		return;
 	}
 
 	(*gpGlyphPositions)[pSessionKey][pKey] = glyphPositions;
-  gLastGlyphPositionsCache = glyphPositions;
+	gLastGlyphPositionsCache = glyphPositions;
 }
 
 void FreeGlyphPositionsForSession(LPVOID pSessionKey)
 {
 //	assert(pSessionKey);
 	assert(gpGlyphPositions);
-	if(!pSessionKey || !gpGlyphPositions){
+	if (!pSessionKey || !gpGlyphPositions) {
 		return;
 	}
 	gpGlyphPositions->erase(pSessionKey);
