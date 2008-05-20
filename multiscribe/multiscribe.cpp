@@ -121,6 +121,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptItemize(
 	__out_ecount(1) int                                 *pcItems);      // Out  Count of items processed (optional)
 #endif
 
+
 #ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
 
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptItemizeOpenType(
@@ -133,6 +134,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptItemizeOpenType(
 	__out_ecount_part(cMaxItems, *pcItems) OPENTYPE_TAG *pScriptTags,   // Out  Array of script tags - parallel to items
 	__out                 int                           *pcItems);      // Out  Count of items processed (optional)
 #endif
+
 //void FreeScriptProperties();
 
 //static GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP * gpGraphiteScriptStringAnalysisMap;

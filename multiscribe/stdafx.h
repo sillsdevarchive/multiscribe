@@ -54,6 +54,8 @@
 
 //#define UNISCRIBE_OPENTYPE 0x0100
 
+//#define INTERCEPT_SCRIPTITEMIZE 1
+
 #include <usp10.h>
 #include <assert.h>
 #include <stdio.h>

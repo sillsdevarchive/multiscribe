@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\lib\graphite\engine\include\graphite&quot;;..\lib\graphite\wrappers\win32;..\lib\udis86-1.4"
+				AdditionalIncludeDirectories="&quot;..\..\..\graphite\engine\include\graphite&quot;;..\..\..\graphite\wrappers\win32;..\lib\udis86-1.4"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE ;_SCL_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,11 +62,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="/VERBOSE:LIB "
 				AdditionalDependencies="graphite.lib udis86.lib"
 				OutputFile="$(OutDir)\usp10.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;..\lib\graphite\engine\debug&quot;;&quot;..\lib\udis86-1.4\libudis86&quot;"
+				AdditionalLibraryDirectories="&quot;..\..\..\graphite\engine\debug&quot;;&quot;..\lib\udis86-1.4\libudis86&quot;"
 				GenerateManifest="true"
+				IgnoreAllDefaultLibraries="false"
 				ModuleDefinitionFile="multiscribe.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
