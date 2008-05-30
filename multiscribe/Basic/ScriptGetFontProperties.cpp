@@ -1,6 +1,6 @@
 #include "../stdafx.h"
-//#pragma comment(linker, "/export:ScriptGetFontProperties=_usp10.ScriptGetFontProperties")
 
+#ifdef IMPERSONATE_USP10
 /////   ScriptGetFontProperties
 
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETFONTPROPERTIES)(
@@ -26,3 +26,4 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptGetFontProperties(
 #ifdef __cplusplus
 }
 #endif
+#endif //IMPERSONATE_USP10

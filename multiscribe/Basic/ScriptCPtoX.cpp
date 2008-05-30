@@ -1,5 +1,7 @@
-//#include "../stdafx.h"
-#pragma comment(linker, "/export:ScriptCPtoX=_usp10.ScriptCPtoX")
+#include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptCPtoX=" USP10DLL ".ScriptCPtoX")
+#endif
 
 ///////   ScriptCPtoX
 //#ifdef __cplusplus

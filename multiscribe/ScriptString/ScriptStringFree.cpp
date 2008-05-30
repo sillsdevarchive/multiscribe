@@ -1,6 +1,8 @@
-//#include "../stdafx.h"
+#include "../stdafx.h"
 //#include "../GraphiteScriptStringAnalysis.h"
-#pragma comment(linker, "/export:ScriptStringFree=_usp10.ScriptStringFree")
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptStringFree=" USP10DLL ".ScriptStringFree")
+#endif
 
 /////   ScriptStringFree - free a string analysis
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSTRINGFREE)(

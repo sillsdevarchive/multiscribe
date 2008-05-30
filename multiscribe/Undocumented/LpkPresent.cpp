@@ -1,4 +1,6 @@
 // Language Pack Present ???
 // This is an undocumented function
-
-#pragma comment(linker, "/export:LpkPresent=_usp10.LpkPresent")
+#include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:LpkPresent=" USP10DLL ".LpkPresent")
+#endif

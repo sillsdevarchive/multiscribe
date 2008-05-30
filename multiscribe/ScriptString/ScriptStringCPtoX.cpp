@@ -1,8 +1,10 @@
-//#include "../stdafx.h"
+#include "../stdafx.h"
 //#include "../GraphiteScriptStringAnalysis.h"
 //#include <math.h>
 
-#pragma comment(linker, "/export:ScriptStringCPtoX=_usp10.ScriptStringCPtoX")
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptStringCPtoX=" USP10DLL ".ScriptStringCPtoX")
+#endif
 
 /////   ScriptStringCPtoX
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSTRINGCPTOX)(

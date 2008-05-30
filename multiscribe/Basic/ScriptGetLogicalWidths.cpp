@@ -1,5 +1,5 @@
-//#include "../stdafx.h"
-#pragma comment(linker, "/export:ScriptGetLogicalWidths=_usp10.ScriptGetLogicalWidths")
+#include "../stdafx.h"
+#pragma comment(linker, "/export:ScriptGetLogicalWidths=" USP10DLL ".ScriptGetLogicalWidths")
 
 /////   ScriptGetLogicalWidths
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETLOGICALWIDTHS)(

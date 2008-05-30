@@ -1,6 +1,8 @@
-//#include "../stdafx.h"
+#include "../stdafx.h"
 //#include "../GraphiteScriptStringAnalysis.h"
-#pragma comment(linker, "/export:ScriptString_pcOutChars=_usp10.ScriptString_pcOutChars")
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptString_pcOutChars=" USP10DLL ".ScriptString_pcOutChars")
+#endif
 
 /////   ScriptString_pcOutChars
 //typedef const int* (CALLBACK* LPFNSCRIPTSTRING_PCOUTCHARS)(

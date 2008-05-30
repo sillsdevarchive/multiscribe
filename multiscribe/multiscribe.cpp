@@ -6,6 +6,10 @@
 #include "GlyphsToTextSourceMap.h"
 #include "interceptor.h"
 
+__declspec(dllexport) void DoNothing()
+{
+}
+
 float round(float f){
   int sign = (f < 0)? -1:1;
   f*=sign;
@@ -109,6 +113,18 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptTextOut(
 	__in_ecount_opt(cGlyphs) const int      *piJustify,     // In     Justified advance widths (optional)
 	__in_ecount(cGlyphs) const GOFFSET      *pGoffset);     // In     x,y offset for combining glyph
 
+#ifdef COLORIZE_SCRIPTSTRINGOUT
+__checkReturn HRESULT WINAPI GraphiteEnabledScriptStringOut(
+	__in_ecount(1) SCRIPT_STRING_ANALYSIS   ssa,            //In  Analysis with glyphs
+	int                                     iX,             //In
+	int                                     iY,             //In
+	UINT                                    uOptions,       //In  ExtTextOut options
+	__in_ecount_opt(1) const RECT           *prc,           //In  Clipping rectangle (iff ETO_CLIPPED)
+	int                                     iMinSel,        //In  Logical selection. Set iMinSel>=iMaxSel for no selection
+	int                                     iMaxSel,        //In
+	BOOL                                    fDisabled)      //In  If disabled, only the background is highlighted.
+#endif
+
 #ifdef INTERCEPT_SCRIPTITEMIZE
 
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptItemize(
@@ -146,6 +162,9 @@ static Interceptor * gpScriptPlaceOpenTypeInterceptor;
 static Interceptor * gpScriptIsComplexInterceptor;
 static Interceptor * gpScriptFreeCacheInterceptor;
 static Interceptor * gpScriptTextOutInterceptor;
+#ifdef COLORIZE_SCRIPTSTRINGOUT
+static Interceptor * gpScriptStringOutInterceptor;
+#endif
 #ifdef INTERCEPT_SCRIPTITEMIZE
 static Interceptor * gpScriptItemizeInterceptor;
 #endif
@@ -188,6 +207,12 @@ LPVOID GetOriginalScriptTextOut()
 {
   return gpScriptTextOutInterceptor->GetOriginal();
 }
+#ifdef COLORIZE_SCRIPTSTRINGOUT
+LPVOID GetOriginalScriptStringOut()
+{
+	return gpScriptStringOutInterceptor->GetOriginal();
+}
+#endif
 
 #ifdef INTERCEPT_SCRIPTITEMIZE
 LPVOID GetOriginalScriptItemize()
@@ -232,9 +257,6 @@ extern "C" {
 #endif
 
 
-#ifdef _MANAGED
-#pragma managed(push, off)
-#endif
 BOOL APIENTRY DllMain( HMODULE hModule,
 					   DWORD  ul_reason_for_call,
 					   LPVOID lpReserved
@@ -245,24 +267,24 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
 	switch(ul_reason_for_call){
 		case DLL_PROCESS_ATTACH:
-			ghUSP10DLL = LoadLibraryA("_usp10.dll");
-	  if(!ghUSP10DLL) {
-		// try again, this time using the specified path used to load this.
-		char szModuleFileName[MAX_PATH];
-		DWORD cbModuleFileName = GetModuleFileNameA(hModule, &szModuleFileName[0], MAX_PATH-1);
-		if(cbModuleFileName != 0) {
-		  char szFileName[_MAX_FNAME];
-		  char szExt[_MAX_EXT];
-		  _splitpath(szModuleFileName, NULL, NULL, &szFileName[0], &szExt[0]);
-		  // remove filename and extension
-		  szModuleFileName[cbModuleFileName - strlen(szFileName) - strlen(szExt)] = NULL;
-		  strcat(szModuleFileName, "_usp10.dll");
-		  ghUSP10DLL = LoadLibraryA(szModuleFileName);
-		}
-		if(!ghUSP10DLL) {
-		  return FALSE;
-		}
-	  }
+			ghUSP10DLL = LoadLibraryA(USP10DLLNAME);
+			if(!ghUSP10DLL) {
+			  // try again, this time using the specified path used to load this.
+			  char szModuleFileName[MAX_PATH];
+			  DWORD cbModuleFileName = GetModuleFileNameA(hModule, &szModuleFileName[0], MAX_PATH-1);
+			  if(cbModuleFileName != 0) {
+				char szFileName[_MAX_FNAME];
+				char szExt[_MAX_EXT];
+				_splitpath(szModuleFileName, NULL, NULL, &szFileName[0], &szExt[0]);
+				// remove filename and extension
+				szModuleFileName[cbModuleFileName - strlen(szFileName) - strlen(szExt)] = NULL;
+				strcat(szModuleFileName, USP10DLLNAME);
+				ghUSP10DLL = LoadLibraryA(szModuleFileName);
+			  }
+			  if(!ghUSP10DLL) {
+				return FALSE;
+			  }
+			}
 			MakeAllScriptPropertiesComplex();
 //			gpGraphiteScriptStringAnalysisMap = new GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP();
 			gpGlyphPositions = new SESSION_TO_GLYPHPOSITIONS();
@@ -272,12 +294,15 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			gpScriptShapeOpenTypeInterceptor = new Interceptor(ghUSP10DLL, "ScriptShapeOpenType", &GraphiteEnabledScriptShapeOpenType);
 			gpScriptIsComplexInterceptor = new Interceptor(ghUSP10DLL, "ScriptIsComplex", &GraphiteEnabledScriptIsComplex);
 			gpScriptFreeCacheInterceptor = new Interceptor(ghUSP10DLL, "ScriptFreeCache", &GraphiteEnabledScriptFreeCache);
-	  gpScriptTextOutInterceptor = new Interceptor(ghUSP10DLL, "ScriptTextOut", &GraphiteEnabledScriptTextOut);
+			gpScriptTextOutInterceptor = new Interceptor(ghUSP10DLL, "ScriptTextOut", &GraphiteEnabledScriptTextOut);
+#ifdef COLORIZE_SCRIPTSTRINGOUT
+			gpScriptStringOutInterceptor = new Interceptor(ghUSP10DLL, "ScriptStringOut", &GraphiteEnabledScriptStringOut);
+#endif
 #ifdef INTERCEPT_SCRIPTITEMIZE
-	  gpScriptItemizeInterceptor = new Interceptor(ghUSP10DLL, "ScriptItemize", &GraphiteEnabledScriptItemize);
+			gpScriptItemizeInterceptor = new Interceptor(ghUSP10DLL, "ScriptItemize", &GraphiteEnabledScriptItemize);
 #endif
 #ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
-	  gpScriptItemizeOpenTypeInterceptor = new Interceptor(ghUSP10DLL, "ScriptItemizeOpenType", &GraphiteEnabledScriptItemizeOpenType);
+			gpScriptItemizeOpenTypeInterceptor = new Interceptor(ghUSP10DLL, "ScriptItemizeOpenType", &GraphiteEnabledScriptItemizeOpenType);
 #endif
 	  break;
 		case DLL_PROCESS_DETACH:
@@ -290,12 +315,15 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			delete gpScriptShapeOpenTypeInterceptor;
 			delete gpScriptIsComplexInterceptor;
 			delete gpScriptFreeCacheInterceptor;
-	  delete gpScriptTextOutInterceptor;
+			delete gpScriptTextOutInterceptor;
+#ifdef COLORIZE_SCRIPTSTRINGOUT
+			delete gpScriptStringOutInterceptor;
+#endif
 #ifdef INTERCEPT_SCRIPTITEMIZE
-	  delete gpScriptItemizeInterceptor;
+			delete gpScriptItemizeInterceptor;
 #endif
 #ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
-	  delete gpScriptItemizeOpenTypeInterceptor;
+			delete gpScriptItemizeOpenTypeInterceptor;
 #endif
 	  break;
 		case DLL_THREAD_ATTACH:
@@ -306,9 +334,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	return TRUE;
 }
 
-#ifdef _MANAGED
-#pragma managed(pop)
-#endif
 #ifdef __cplusplus
 }
 #endif

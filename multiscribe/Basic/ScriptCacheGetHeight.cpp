@@ -1,5 +1,7 @@
-//#include "../stdafx.h"
-#pragma comment(linker, "/export:ScriptCacheGetHeight=_usp10.ScriptCacheGetHeight")
+#include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptCacheGetHeight=" USP10DLL ".ScriptCacheGetHeight")
+#endif
 
 /////   ScriptCacheGetHeight
 //#ifdef __cplusplus

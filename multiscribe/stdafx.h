@@ -5,6 +5,29 @@
 
 #pragma once
 
+// there are two modes in which this module can be created and run.
+// Impersonating Usp10: the real usp10.dll must be renamed and this
+//                      dll must have the name usp10.dll and all the
+//                      entry points must either have code or be forwarded
+//                      build system must define IMPERSONATE_USP10
+// Linked: the real usp10.dll doesn't have to be renamed. Instead
+//         name this dll something like multiscribe.dll and have an
+//         application that wants to use it, call LoadLibrary("multiscribe.dll")
+//         it has no entry points (except dllmain)
+
+
+
+#ifndef IMPERSONATE_USP10
+#undef USP10DLL
+#define USP10DLL "usp10"
+#endif
+
+#ifndef USP10DLL
+#define USP10DLL "_usp10"
+#endif
+
+#define USP10DLLNAME USP10DLL ".dll"
+
 // Modify the following defines if you have to target a platform prior to the ones specified below.
 // Refer to MSDN for the latest info on corresponding values for different platforms.
 #ifndef WINVER				// Allow use of features specific to Windows XP or later.
@@ -60,7 +83,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string>
-//#include "stdafx.h"
 
 #include <GrClient.h> // this should be in GrFeature.h
 #include <GrAppData.h> // this should be in font.h and GrFeature.h
@@ -108,7 +130,7 @@ bool IsGraphiteFont(HDC hdc);
 	return_type return_variable_name; \
 	HINSTANCE handle; \
 	FARPROC function; \
-	handle = LoadLibraryA("_usp10.dll"); \
+	handle = LoadLibraryA(USP10DLLNAME); \
 	if(handle == NULL){ \
 		return error_return_value; \
 	} \

@@ -1,6 +1,8 @@
-#pragma comment(linker, "/export:ScriptItemize=_usp10.ScriptItemize")
-
 #include "../stdafx.h"
+
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptItemize=" USP10DLL ".ScriptItemize")
+#endif
 
 #ifdef INTERCEPT_SCRIPTITEMIZE
 

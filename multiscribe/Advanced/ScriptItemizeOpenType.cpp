@@ -1,6 +1,9 @@
-#pragma comment(linker, "/export:ScriptItemizeOpenType=_usp10.ScriptItemizeOpenType")
-#ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
 #include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptItemizeOpenType=" USP10DLL ".ScriptItemizeOpenType")
+#endif
+
+#ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
 
 LPVOID GetOriginalScriptItemizeOpenType();
 

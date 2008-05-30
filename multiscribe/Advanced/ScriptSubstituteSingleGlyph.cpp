@@ -1,5 +1,7 @@
-//#include "../stdafx.h"
-#pragma comment(linker, "/export:ScriptSubstituteSingleGlyph=_usp10.ScriptSubstituteSingleGlyph")
+#include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptSubstituteSingleGlyph=" USP10DLL ".ScriptSubstituteSingleGlyph")
+#endif
 
 /////  ScriptSubstituteSingleGlyph
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSUBSTITUTESINGLEGLYPH) (

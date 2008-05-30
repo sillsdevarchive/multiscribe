@@ -1,11 +1,13 @@
-#ifndef COLORIZED
-#pragma comment(linker, "/export:ScriptStringOut=_usp10.ScriptStringOut")
-
-#else
-#pragma comment(linker, "/export:ScriptStringOut=GraphiteEnabledScriptStringOut")
-
 #include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptStringOut=" USP10DLL ".ScriptStringOut")
+#endif
+
+#ifdef COLORIZE_SCRIPTSTRINGOUT
+
 //#include "../GraphiteScriptStringAnalysis.h"
+
+LPVOID GetOriginalScriptStringOut();
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 ///   ScriptStringOut
@@ -80,14 +82,14 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringOut(
 	//	return S_OK;
 	//}
 	//else{
-		WRAP_BEGIN(ScriptStringOut, LPFNSCRIPTSTRINGOUT)
+		LPFNSCRIPTSTRINGOUT ScriptStringOut = (LPFNSCRIPTSTRINGOUT) GetOriginalScriptStringOut();
+
 		HDC* phdc = (HDC*) ssa;
 		hdc = *phdc;
 		COLORREF OriginalTextColor = SetTextColor(hdc, RGB(IsGraphiteFont(hdc)?128:255,0,0));
 
 		hResult = ScriptStringOut(ssa, iX,iY, uOptions, prc, iMinSel, iMaxSel, fDisabled);
 		SetTextColor(hdc, OriginalTextColor);
-		WRAP_END
 	//}
 
 }

@@ -1,6 +1,8 @@
-//#include "../stdafx.h"
+#include "../stdafx.h"
 //#include "../GraphiteScriptStringAnalysis.h"
-#pragma comment(linker, "/export:ScriptStringAnalyse=_usp10.ScriptStringAnalyse")
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptStringAnalyse=" USP10DLL ".ScriptStringAnalyse")
+#endif
 
 //   ScriptStringAnalyse
 //

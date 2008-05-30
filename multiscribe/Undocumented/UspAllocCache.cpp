@@ -1,1 +1,4 @@
-#pragma comment(linker, "/export:UspAllocCache=_usp10.UspAllocCache")
+#include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:UspAllocCache=" USP10DLL ".UspAllocCache")
+#endif

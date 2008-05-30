@@ -1,1 +1,4 @@
-#pragma comment(linker, "/export:UspFreeMem=_usp10.UspFreeMem")
+#include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:UspFreeMem=" USP10DLL ".UspFreeMem")
+#endif

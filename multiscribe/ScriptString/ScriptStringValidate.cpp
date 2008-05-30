@@ -1,6 +1,8 @@
-//#include "../stdafx.h"
+#include "../stdafx.h"
 //#include "../GraphiteScriptStringAnalysis.h"
-#pragma comment(linker, "/export:ScriptStringValidate=_usp10.ScriptStringValidate")
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptStringValidate=" USP10DLL ".ScriptStringValidate")
+#endif
 
 /////   ScriptStringValidate
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSTRINGVALIDATE)(

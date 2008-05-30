@@ -1,5 +1,7 @@
-//#include "../stdafx.h"
-#pragma comment(linker, "/export:ScriptXtoCP=_usp10.ScriptXtoCP")
+#include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptXtoCP=" USP10DLL ".ScriptXtoCP")
+#endif
 
 /////   ScriptXtoCP
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTXTOCP)(

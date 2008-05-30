@@ -1,7 +1,9 @@
 #include "../stdafx.h"
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// ScriptIsComplex
-#pragma comment(linker, "/export:ScriptIsComplex=_usp10.ScriptIsComplex")
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptIsComplex=" USP10DLL ".ScriptIsComplex")
+#endif
 
 LPVOID GetOriginalScriptIsComplex();
 

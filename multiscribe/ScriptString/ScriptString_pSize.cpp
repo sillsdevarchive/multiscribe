@@ -1,9 +1,11 @@
-//#include "../stdafx.h"
+#include "../stdafx.h"
 //#include "../GraphiteScriptStringAnalysis.h"
 //#include <math.h>
 //
 
-#pragma comment(linker, "/export:ScriptString_pSize=_usp10.ScriptString_pSize")
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptString_pSize=" USP10DLL ".ScriptString_pSize")
+#endif
 
 ///////   ScriptStringSize
 //typedef const SIZE* (CALLBACK* LPFNSCRIPTSTRING_PSIZE) (

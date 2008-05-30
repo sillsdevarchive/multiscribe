@@ -1,5 +1,7 @@
-//#include "../stdafx.h"
-#pragma comment(linker, "/export:ScriptGetFontScriptTags=_usp10.ScriptGetFontScriptTags")
+#include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptGetFontScriptTags=" USP10DLL ".ScriptGetFontScriptTags")
+#endif
 
 ///// ScriptGetFontScriptList
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETFONTSCRIPTTAGS)(

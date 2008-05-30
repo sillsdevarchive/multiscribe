@@ -1,6 +1,8 @@
 // we define this since it is typically only executed once and we need to have
 // some function that we don't forward or we won't get loaded.
 #include "../stdafx.h"
+
+#ifdef IMPERSONATE_USP10
 //static SCRIPT_PROPERTIES **gppScriptProperties;
 //static int giNumScripts;
 //
@@ -8,7 +10,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// ScriptGetProperties
-//#pragma comment(linker, "/export:ScriptGetProperties=_usp10.ScriptGetProperties")
 
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETPROPERTIES) (
 	__deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,        // Out  Receives pointer to table of pointers to properties indexed by script
@@ -44,6 +45,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptGetProperties(
 }
 #endif
 
+#ifdef INTERCEPT_SCRIPTITEMIZE
 const SCRIPT_PROPERTIES * GetScriptPropertiesOfEngine(int i){
   const SCRIPT_PROPERTIES** pSpTable;
   int macScripts;
@@ -53,6 +55,11 @@ const SCRIPT_PROPERTIES * GetScriptPropertiesOfEngine(int i){
   }
   return NULL;
 }
+#endif
+
+#endif
+
+
 //
 //int GetGraphiteScriptId(){
 //	return giNumScripts - 1;

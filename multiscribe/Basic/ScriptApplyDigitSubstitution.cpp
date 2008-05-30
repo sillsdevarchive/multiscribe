@@ -1,5 +1,7 @@
-//#include "../stdafx.h"
-#pragma comment(linker, "/export:ScriptApplyDigitSubstitution=_usp10.ScriptApplyDigitSubstitution")
+#include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptApplyDigitSubstitution=" USP10DLL ".ScriptApplyDigitSubstitution")
+#endif
 
 //// ScriptApplyDigitSubstitution
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTAPPLYDIGITSUBSTITUTION)(

@@ -1,6 +1,8 @@
-#pragma comment(linker, "/export:ScriptTextOut=_usp10.ScriptTextOut")
-
 #include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptTextOut=" USP10DLL ".ScriptTextOut")
+#endif
+
 LPVOID GetOriginalScriptTextOut();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

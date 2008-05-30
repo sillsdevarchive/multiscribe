@@ -1,5 +1,7 @@
-//#include "../stdafx.h"
-#pragma comment(linker, "/export:ScriptApplyLogicalWidth=_usp10.ScriptApplyLogicalWidth")
+#include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptApplyLogicalWidth=" USP10DLL ".ScriptApplyLogicalWidth")
+#endif
 
 ///////   ScriptApplyLogicalWidth
 //

@@ -1,7 +1,6 @@
 #include "../stdafx.h"
-//#pragma comment(linker, "/export:ScriptGetCMap=_usp10.ScriptGetCMap")
 
-
+#ifdef IMPERSONATE_USP10
 ///////   ScriptGetCMap
 
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETCMAP)(
@@ -24,10 +23,11 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptGetCMap(
 	DWORD                                   dwFlags,        // In    Flags such as SGCM_RTL
 	__out_ecount(cChars) WORD               *pwOutGlyphs)  // Out   Array of glyphs, one per input character
 {
-	WRAP_BEGIN(ScriptGetCMap, LPFNSCRIPTGETCMAP)
-	hResult = ScriptGetCMap(hdc,psc,pwcInChars,cChars,dwFlags,pwOutGlyphs);
+	WRAP_BEGIN(RealScriptGetCMap, LPFNSCRIPTGETCMAP)
+	hResult = RealScriptGetCMap(hdc,psc,pwcInChars,cChars,dwFlags,pwOutGlyphs);
 	WRAP_END
 }
 #ifdef __cplusplus
 }
 #endif
+#endif //IMPERSONATE_USP10

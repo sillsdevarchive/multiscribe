@@ -1,5 +1,5 @@
-//#include "../stdafx.h"
-#pragma comment(linker, "/export:ScriptGetGlyphABCWidth=_usp10.ScriptGetGlyphABCWidth")
+#include "../stdafx.h"
+#pragma comment(linker, "/export:ScriptGetGlyphABCWidth=" USP10DLL ".ScriptGetGlyphABCWidth")
 
 ///////   ScriptGetGlyphABCWidth
 //

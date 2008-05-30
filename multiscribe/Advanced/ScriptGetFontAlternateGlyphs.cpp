@@ -1,6 +1,7 @@
-//#include "../stdafx.h"
-#pragma comment(linker, "/export:ScriptGetFontAlternateGlyphs=_usp10.ScriptGetFontAlternateGlyphs")
-
+#include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptGetFontAlternateGlyphs=" USP10DLL ".ScriptGetFontAlternateGlyphs")
+#endif
 /////  ScriptGetFontAlternateGlyphs
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETFONTALTERNATEGLYPHS)(
 //    __in_opt           HDC                    hdc,             // In    Optional (see under caching)

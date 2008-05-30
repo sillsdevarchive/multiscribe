@@ -1,7 +1,9 @@
 #include "../stdafx.h"
 #include "../GlyphsToTextSourceMap.h"
 
-#pragma comment(linker, "/export:ScriptFreeCache=_usp10.ScriptFreeCache")
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptFreeCache=" USP10DLL ".ScriptFreeCache")
+#endif
 
 LPVOID GetOriginalScriptFreeCache();
 

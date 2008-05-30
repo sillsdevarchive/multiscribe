@@ -1,6 +1,8 @@
-//#include "../stdafx.h"
+#include "../stdafx.h"
 //#include "../GraphiteScriptStringAnalysis.h"
-#pragma comment(linker, "/export:ScriptStringGetLogicalWidths=_usp10.ScriptStringGetLogicalWidths")
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptStringGetLogicalWidths=" USP10DLL ".ScriptStringGetLogicalWidths")
+#endif
 
 /////   ScriptStringGetLogicalWidths
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSTRINGGETLOGICALWIDTHS)(

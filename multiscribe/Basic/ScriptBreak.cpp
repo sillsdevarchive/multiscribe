@@ -1,5 +1,7 @@
-//#include "../stdafx.h"
-#pragma comment(linker, "/export:ScriptBreak=_usp10.ScriptBreak")
+#include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptBreak=" USP10DLL ".ScriptBreak")
+#endif
 
 ///////   ScriptBreak
 //

@@ -1,6 +1,8 @@
-#pragma comment(linker, "/export:ScriptShape=_usp10.ScriptShape")
-
 #include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptShape=" USP10DLL ".ScriptShape")
+#endif
+
 #include "../GlyphsToTextSourceMap.h"
 #include "../TextSource.h"
 #include <utility>

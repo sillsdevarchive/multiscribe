@@ -1,6 +1,7 @@
-//#include "../stdafx.h"
-#pragma comment(linker, "/export:ScriptPositionSingleGlyph=_usp10.ScriptPositionSingleGlyph")
-
+#include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptPositionSingleGlyph=" USP10DLL ".ScriptPositionSingleGlyph")
+#endif
 /////  ScriptPositionSingleGlyph
 //
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTPOSITIONSINGLEGLYPH)(

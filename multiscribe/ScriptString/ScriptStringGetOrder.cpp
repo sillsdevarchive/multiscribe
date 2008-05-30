@@ -1,6 +1,8 @@
-//#include "../stdafx.h"
+#include "../stdafx.h"
 //#include "../GraphiteScriptStringAnalysis.h"
-#pragma comment(linker, "/export:ScriptStringGetOrder=_usp10.ScriptStringGetOrder")
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptStringGetOrder=" USP10DLL ".ScriptStringGetOrder")
+#endif
 
 /////   ScriptStringGetOrder
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSTRINGGETORDER)(

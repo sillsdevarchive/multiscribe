@@ -1,6 +1,8 @@
-#pragma comment(linker, "/export:ScriptShapeOpenType=_usp10.ScriptShapeOpenType")
-
 #include "../stdafx.h"
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptShapeOpenType=" USP10DLL ".ScriptShapeOpenType")
+#endif
+
 #include "../TextSource.h"
 LPVOID GetOriginalScriptShapeOpenType();
 HRESULT GetGlyphsAndPositions(

@@ -1,6 +1,8 @@
-//#include "../stdafx.h"
+#include "../stdafx.h"
 //#include "../GraphiteScriptStringAnalysis.h"
-#pragma comment(linker, "/export:ScriptStringXtoCP=_usp10.ScriptStringXtoCP")
+#ifdef IMPERSONATE_USP10
+#pragma comment(linker, "/export:ScriptStringXtoCP=" USP10DLL ".ScriptStringXtoCP")
+#endif
 
 /////   ScriptStringXtoCP
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSTRINGXTOCP)(
