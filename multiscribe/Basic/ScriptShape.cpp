@@ -1,4 +1,5 @@
 #include "../stdafx.h"
+
 #ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptShape=" USP10DLL ".ScriptShape")
 #endif
@@ -10,13 +11,14 @@
 
 LPVOID GetOriginalScriptShape();
 
-bool IsNko(const WCHAR* sz, int c){
-  for(int i = 0; i != c; ++i){
-	if(0x07C0 <= sz[i] && sz[i] <= 0x07ff){
-	  return true;
+bool IsNko(const WCHAR* sz, int c)
+{
+	for (int i = 0; i != c; ++i) {
+		if(0x07C0 <= sz[i] && sz[i] <= 0x07ff){
+			return true;
+		}
 	}
-  }
-  return false;
+	return false;
 }
 
 HRESULT GetGlyphsAndPositions(
@@ -74,8 +76,7 @@ HRESULT GetGlyphsAndPositions(
 	int * rgFirstGlyphOfCluster = new int [cChars];
 	bool * rgIsClusterStart = new bool [cGlyphs]; //in logical order but the start of a rtl cluster is the last glyph of the cluster
 	int cCharsX, cgidX;
-	seg.getUniscribeClusters(rgFirstGlyphOfCluster, cChars, &cCharsX,
-						rgIsClusterStart, *pcGlyphs, &cgidX);
+	seg.getUniscribeClusters(rgFirstGlyphOfCluster, cChars, &cCharsX, rgIsClusterStart, *pcGlyphs, &cgidX);
 
 	for ( int i = 0; i < cChars; ++i)
 	{

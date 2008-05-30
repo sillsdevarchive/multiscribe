@@ -1,6 +1,5 @@
 #include "../stdafx.h"
-///////////////////////////////////////////////////////////////////////////////////////////////////
-///// ScriptIsComplex
+
 #ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptIsComplex=" USP10DLL ".ScriptIsComplex")
 #endif
@@ -20,7 +19,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptIsComplex(
 	int                                 cInChars,       //In  Length in characters
 	DWORD                               dwFlags)       //In  Flags (see above)
 {
-//	WRAP_BEGIN(ScriptIsComplex, LPFNSCRIPTISCOMPLEX)
+	//WRAP_BEGIN(ScriptIsComplex, LPFNSCRIPTISCOMPLEX)
 
 	LPFNSCRIPTISCOMPLEX ScriptIsComplex = (LPFNSCRIPTISCOMPLEX) GetOriginalScriptIsComplex();
 
@@ -29,13 +28,15 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptIsComplex(
 	// what font will be used at this point, the best we could do is
 	// to see if there are any graphite fonts which contain rules
 	// which operate on any of these characters.
-	if (hResult == S_FALSE){
+	if (hResult == S_FALSE) {
 		hResult = S_OK; // override so it is complex
 	}
 
 	return hResult;
-//	WRAP_END
+
+	//WRAP_END
 }
+
 //#ifdef __cplusplus
 //}
 //#endif

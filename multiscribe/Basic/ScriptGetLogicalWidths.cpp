@@ -1,4 +1,5 @@
 #include "../stdafx.h"
+
 #pragma comment(linker, "/export:ScriptGetLogicalWidths=" USP10DLL ".ScriptGetLogicalWidths")
 
 /////   ScriptGetLogicalWidths

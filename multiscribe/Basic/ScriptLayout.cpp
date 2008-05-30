@@ -1,7 +1,9 @@
 #include "../stdafx.h"
+
 #ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptLayout=" USP10DLL ".ScriptLayout")
 #endif
+
 /////   ScriptLayout
 //
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTLAYOUT) (

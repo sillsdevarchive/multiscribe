@@ -1,4 +1,5 @@
 #include "../stdafx.h"
+
 #ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptCacheGetHeight=" USP10DLL ".ScriptCacheGetHeight")
 #endif

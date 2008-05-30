@@ -13,9 +13,6 @@ LPVOID GetOriginalScriptItemize();
 static WORD eScriptArabic = (WORD)-1;
 
 
-//////////////////////////////////////////////////////////////////////////////////////
-///   ScriptItemize
-
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTITEMIZE) (
 	__in_ecount(cInChars) const WCHAR                   *pwcInChars,    // In   Unicode string to be itemized
 	int                                                 cInChars,       // In   Codepoint count to itemize
@@ -28,7 +25,6 @@ typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTITEMIZE) (
 //#ifdef __cplusplus
 //extern "C" {
 //#endif
-
 
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptItemize(
 	__in_ecount(cInChars) const WCHAR                   *pwcInChars,    // In   Unicode string to be itemized

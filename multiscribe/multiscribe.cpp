@@ -10,14 +10,14 @@ __declspec(dllexport) void DoNothing()
 {
 }
 
-float round(float f){
-  int sign = (f < 0)? -1:1;
-  f*=sign;
-  float fFloored = floor(f);
-  if(f - fFloored < 0.5){
-	return fFloored * sign;
-  }
-  return ceil(f)*sign;
+float round(float f) {
+	int sign = (f < 0) ? -1 : 1;
+	f *= sign;
+	float fFloored = floor(f);
+	if (f - fFloored < 0.5) {
+		return fFloored * sign;
+	}
+	return ceil(f)*sign;
 }
 
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
@@ -29,7 +29,7 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlace(
 	__inout_ecount(1) SCRIPT_ANALYSIS           *psa,       // InOut Result of ScriptItemize (may have fNoGlyphIndex set)
 	__out_ecount_full(cGlyphs) int              *piAdvance, // Out   Advance wdiths
 	__out_ecount_full_opt(cGlyphs) GOFFSET      *pGoffset,  // Out   x,y offset for combining glyph
-	__out_ecount(1) ABC                         *pABC);      // Out   Composite ABC for the whole run (Optional)
+	__out_ecount(1) ABC                         *pABC);     // Out   Composite ABC for the whole run (Optional)
 
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptShape(
 	HDC                                                     hdc,            // In    Optional (see under caching)
@@ -56,8 +56,8 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptShapeOpenType(
 	__inout                    SCRIPT_CACHE           *psc,            // InOut Cache handle
 	__inout                    SCRIPT_ANALYSIS        *psa,            // InOut Result of ScriptItemize (may have fNoGlyphIndex set)
 
-	__in                       OPENTYPE_TAG            tagScript,      // In    Font script tag for shaping
-	__in                       OPENTYPE_TAG            tagLangSys,     // In    Font language system tag for shaping
+	__in                       OPENTYPE_TAG            tagScript,         // In    Font script tag for shaping
+	__in                       OPENTYPE_TAG            tagLangSys,        // In    Font language system tag for shaping
 	__in_ecount_opt(cRanges)   int                    *rcRangeChars,      // In    Array of number of characters per range
 	__in_ecount_opt(cRanges)   TEXTRANGE_PROPERTIES  **rpRangeProperties, // In    Array of range properties (for each range)
 	__in                       int                     cRanges,           // In    Number of ranges
@@ -78,8 +78,8 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptPlaceOpenType(
 	__inout                    SCRIPT_CACHE           *psc,            // InOut Cache handle
 	__inout                    SCRIPT_ANALYSIS        *psa,            // InOut Result of ScriptItemize (may have fNoGlyphIndex set)
 
-	__in                       OPENTYPE_TAG            tagScript,      // In    Font script tag for shaping
-	__in                       OPENTYPE_TAG            tagLangSys,     // In    Font language system tag for shaping
+	__in                       OPENTYPE_TAG            tagScript,         // In    Font script tag for shaping
+	__in                       OPENTYPE_TAG            tagLangSys,        // In    Font language system tag for shaping
 	__in_ecount_opt(cRanges)   int                    *rcRangeChars,      // In    Array of number of characters per range
 	__in_ecount_opt(cRanges)   TEXTRANGE_PROPERTIES  **rpRangeProperties, // In    Array of range properties (for each range)
 	__in                       int                     cRanges,           // In    Number of ranges
@@ -205,7 +205,7 @@ LPVOID GetOriginalScriptFreeCache()
 
 LPVOID GetOriginalScriptTextOut()
 {
-  return gpScriptTextOutInterceptor->GetOriginal();
+	return gpScriptTextOutInterceptor->GetOriginal();
 }
 #ifdef COLORIZE_SCRIPTSTRINGOUT
 LPVOID GetOriginalScriptStringOut()
@@ -217,22 +217,23 @@ LPVOID GetOriginalScriptStringOut()
 #ifdef INTERCEPT_SCRIPTITEMIZE
 LPVOID GetOriginalScriptItemize()
 {
-  return gpScriptItemizeInterceptor->GetOriginal();
+	return gpScriptItemizeInterceptor->GetOriginal();
 }
-#endif
+#endif // INTERCEPT_SCRIPTITEMIZE
 
 #ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
 LPVOID GetOriginalScriptItemizeOpenType()
 {
-  return gpScriptItemizeOpenTypeInterceptor->GetOriginal();
+	return gpScriptItemizeOpenTypeInterceptor->GetOriginal();
 }
-#endif
+#endif // INTERCEPT_SCRIPTITEMIZEOPENTYPE
 
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETPROPERTIES) (
 	__deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,        // Out  Receives pointer to table of pointers to properties indexed by script
-	__out_ecount(1) int                             *piNumScripts); // Out  Receives number of scripts (valid values are 0 through NumScripts-1)
+	__out_ecount(1) int                             *piNumScripts);  // Out  Receives number of scripts (valid values are 0 through NumScripts-1)
 
-HRESULT MakeAllScriptPropertiesComplex(){
+HRESULT MakeAllScriptPropertiesComplex()
+{
 	WRAP_BEGIN(ScriptGetProperties, LPFNSCRIPTGETPROPERTIES)
 
 	const SCRIPT_PROPERTIES ** ppSp;
@@ -241,7 +242,7 @@ HRESULT MakeAllScriptPropertiesComplex(){
 
 	int iNumScripts;
 	hResult = ScriptGetProperties(&ppSp, &iNumScripts);
-	if (hResult == S_OK){
+	if (hResult == S_OK) {
 		for(int i = 0; i < iNumScripts; ++i){
 			pSp = const_cast<SCRIPT_PROPERTIES *>(ppSp[i]);
 			VirtualProtect(pSp, sizeof(SCRIPT_PROPERTIES), PAGE_EXECUTE_READWRITE, &dwOriginalProtection); // unlock
@@ -257,33 +258,33 @@ extern "C" {
 #endif
 
 
-BOOL APIENTRY DllMain( HMODULE hModule,
-					   DWORD  ul_reason_for_call,
-					   LPVOID lpReserved
-					 )
+BOOL APIENTRY DllMain(HMODULE hModule,
+	DWORD  ul_reason_for_call,
+	LPVOID lpReserved)
 {
 	hModule;
 	lpReserved;
 
-	switch(ul_reason_for_call){
+	switch(ul_reason_for_call)
+	{
 		case DLL_PROCESS_ATTACH:
 			ghUSP10DLL = LoadLibraryA(USP10DLLNAME);
-			if(!ghUSP10DLL) {
-			  // try again, this time using the specified path used to load this.
-			  char szModuleFileName[MAX_PATH];
-			  DWORD cbModuleFileName = GetModuleFileNameA(hModule, &szModuleFileName[0], MAX_PATH-1);
-			  if(cbModuleFileName != 0) {
-				char szFileName[_MAX_FNAME];
-				char szExt[_MAX_EXT];
-				_splitpath(szModuleFileName, NULL, NULL, &szFileName[0], &szExt[0]);
-				// remove filename and extension
-				szModuleFileName[cbModuleFileName - strlen(szFileName) - strlen(szExt)] = NULL;
-				strcat(szModuleFileName, USP10DLLNAME);
-				ghUSP10DLL = LoadLibraryA(szModuleFileName);
-			  }
-			  if(!ghUSP10DLL) {
-				return FALSE;
-			  }
+			if (!ghUSP10DLL) {
+				// try again, this time using the specified path used to load this.
+				char szModuleFileName[MAX_PATH];
+				DWORD cbModuleFileName = GetModuleFileNameA(hModule, &szModuleFileName[0], MAX_PATH-1);
+				if (cbModuleFileName != 0) {
+					char szFileName[_MAX_FNAME];
+					char szExt[_MAX_EXT];
+					_splitpath(szModuleFileName, NULL, NULL, &szFileName[0], &szExt[0]);
+					// remove filename and extension
+					szModuleFileName[cbModuleFileName - strlen(szFileName) - strlen(szExt)] = NULL;
+					strcat(szModuleFileName, USP10DLLNAME);
+					ghUSP10DLL = LoadLibraryA(szModuleFileName);
+				}
+				if (!ghUSP10DLL) {
+					return FALSE;
+				}
 			}
 			MakeAllScriptPropertiesComplex();
 //			gpGraphiteScriptStringAnalysisMap = new GRAPHITE_SCRIPT_STRING_ANALYSIS_MAP();
@@ -304,7 +305,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 #ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
 			gpScriptItemizeOpenTypeInterceptor = new Interceptor(ghUSP10DLL, "ScriptItemizeOpenType", &GraphiteEnabledScriptItemizeOpenType);
 #endif
-	  break;
+			break;
 		case DLL_PROCESS_DETACH:
 //			delete gpGraphiteScriptStringAnalysisMap;
 			delete gpGlyphPositions;
@@ -325,12 +326,12 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 #ifdef INTERCEPT_SCRIPTITEMIZEOPENTYPE
 			delete gpScriptItemizeOpenTypeInterceptor;
 #endif
-	  break;
+			break;
 		case DLL_THREAD_ATTACH:
 			break;
 		case DLL_THREAD_DETACH:
 			break;
-		}
+	}
 	return TRUE;
 }
 
@@ -400,29 +401,30 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 static TextSource gLastTextSourceCache;
 static GlyphPositions gLastGlyphPositionsCache;
 
-TextSource & GetLastScriptShapeTextSource(){
-  return gLastTextSourceCache;
+TextSource & GetLastScriptShapeTextSource()
+{
+	return gLastTextSourceCache;
 }
 
-void SetLastScriptShapeTextSource(TextSource &textSource){
-  gLastTextSourceCache = textSource;
+void SetLastScriptShapeTextSource(TextSource &textSource)
+{
+	gLastTextSourceCache = textSource;
 }
 
-std::basic_string<WORD>&
-GetLastScriptShapeGlyphs() {
-  return gLastGlyphPositionsCache.glyphs;
+std::basic_string<WORD>& GetLastScriptShapeGlyphs()
+{
+	return gLastGlyphPositionsCache.glyphs;
 }
 
-GlyphPositions *
-GetGlyphPositions(LPVOID pSessionKey, LPVOID pKey,
-				  const WORD * pGlyphs, int cGlyphs)
+GlyphPositions * GetGlyphPositions(LPVOID pSessionKey, LPVOID pKey,
+	const WORD * pGlyphs, int cGlyphs)
 {
 	assert(pSessionKey);
 	assert(pKey);
 	assert(gpGlyphPositions);
 	assert(pGlyphs);
 
-	if(!pSessionKey || !pKey || !gpGlyphPositions || !pGlyphs){
+	if (!pSessionKey || !pKey || !gpGlyphPositions || !pGlyphs){
 		return NULL;
 	}
 
@@ -448,8 +450,7 @@ GetGlyphPositions(LPVOID pSessionKey, LPVOID pKey,
 	return NULL;
 }
 
-void
-SetGlyphPositions(LPVOID pSessionKey, LPVOID pKey, GlyphPositions & glyphPositions)
+void SetGlyphPositions(LPVOID pSessionKey, LPVOID pKey, GlyphPositions & glyphPositions)
 {
 	assert(pSessionKey);
 	assert(pKey);

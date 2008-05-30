@@ -1,4 +1,5 @@
 #include "../stdafx.h"
+
 //#include "../GraphiteScriptStringAnalysis.h"
 //#include <math.h>
 

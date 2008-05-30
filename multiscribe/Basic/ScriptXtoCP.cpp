@@ -1,4 +1,5 @@
 #include "../stdafx.h"
+
 #ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptXtoCP=" USP10DLL ".ScriptXtoCP")
 #endif
@@ -28,7 +29,7 @@
 //    __in_ecount(cGlyphs) const int              *piAdvance,     // In   Advance widths
 //    __in_ecount(1) const SCRIPT_ANALYSIS        *psa,           // In   Script analysis from item attributes
 //    __out_ecount(1) int                         *piCP,          // Out  Resulting character position
-//    __out_ecount(1) int                         *piTrailing)   // Out  Leading or trailing half flag
+//    __out_ecount(1) int                         *piTrailing)    // Out  Leading or trailing half flag
 //{
 //	WRAP_BEGIN(ScriptXtoCP, LPFNSCRIPTXTOCP)
 //	hResult = ScriptXtoCP(iX, cChars, cGlyphs, pwLogClust, psva, piAdvance, psa, piCP, piTrailing);

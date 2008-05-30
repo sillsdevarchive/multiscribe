@@ -1,7 +1,9 @@
 #include "../stdafx.h"
+
 #ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptGetFontLanguageTags=" USP10DLL ".ScriptGetFontLanguageTags")
 #endif
+
 ///// ScriptGetFontLanguageTags
 //#ifdef __cplusplus
 //extern "C" {

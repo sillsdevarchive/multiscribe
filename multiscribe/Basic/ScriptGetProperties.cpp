@@ -3,23 +3,22 @@
 #include "../stdafx.h"
 
 #ifdef IMPERSONATE_USP10
+
 //static SCRIPT_PROPERTIES **gppScriptProperties;
 //static int giNumScripts;
 //
 //HRESULT InitializeScriptProperties();
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-///// ScriptGetProperties
-
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETPROPERTIES) (
-	__deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,        // Out  Receives pointer to table of pointers to properties indexed by script
+	__deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,       // Out  Receives pointer to table of pointers to properties indexed by script
 	__out_ecount(1) int                             *piNumScripts); // Out  Receives number of scripts (valid values are 0 through NumScripts-1)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 __checkReturn HRESULT WINAPI GraphiteEnabledScriptGetProperties(
-	__deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,        // Out  Receives pointer to table of pointers to properties indexed by script
+	__deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,       // Out  Receives pointer to table of pointers to properties indexed by script
 	__out_ecount(1) int                             *piNumScripts)  // Out  Receives number of scripts (valid values are 0 through NumScripts-1)
 {
 	WRAP_BEGIN(ScriptGetProperties, LPFNSCRIPTGETPROPERTIES)
@@ -45,22 +44,37 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptGetProperties(
 }
 #endif
 
+
 #ifdef INTERCEPT_SCRIPTITEMIZE
-const SCRIPT_PROPERTIES * GetScriptPropertiesOfEngine(int i){
-  const SCRIPT_PROPERTIES** pSpTable;
-  int macScripts;
-  GraphiteEnabledScriptGetProperties(&pSpTable, &macScripts);
-  if(i >= 0 && i < macScripts){
-	return pSpTable[i];
-  }
-  return NULL;
+const SCRIPT_PROPERTIES * GetScriptPropertiesOfEngine(int i)
+{
+	const SCRIPT_PROPERTIES** pSpTable;
+	int macScripts;
+	GraphiteEnabledScriptGetProperties(&pSpTable, &macScripts);
+	if (i >= 0 && i < macScripts) {
+		return pSpTable[i];
+	}
+	return NULL;
 }
-#endif
-
-#endif
+#endif // INTERCEPT_SCRIPTITEMIZE
 
 
-//
+#endif // IMPERSONATE_USP10
+
+
+
+#ifndef IMPERSONATE_USP10
+
+__checkReturn HRESULT WINAPI GraphiteEnabledScriptGetProperties(
+	__deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,       // Out  Receives pointer to table of pointers to properties indexed by script
+	__out_ecount(1) int                             *piNumScripts)  // Out  Receives number of scripts (valid values are 0 through NumScripts-1)
+{
+	return E_NOTIMPL;
+}
+
+#endif // !IMPERSONATE_USP10
+
+
 //int GetGraphiteScriptId(){
 //	return giNumScripts - 1;
 //}

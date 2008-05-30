@@ -1,4 +1,5 @@
 #include "../stdafx.h"
+
 #ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptTextOut=" USP10DLL ".ScriptTextOut")
 #endif
@@ -43,9 +44,10 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptTextOut(
 	__in_ecount_opt(cGlyphs) const int      *piJustify,     // In     Justified advance widths (optional)
 	__in_ecount(cGlyphs) const GOFFSET      *pGoffset)     // In     x,y offset for combining glyph
 {
-//	WRAP_BEGIN(ScriptTextOut, LPFNSCRIPTTEXTOUT)
+	//	WRAP_BEGIN(ScriptTextOut, LPFNSCRIPTTEXTOUT)
 
-  LPFNSCRIPTTEXTOUT ScriptTextOut = (LPFNSCRIPTTEXTOUT) GetOriginalScriptTextOut();
+	LPFNSCRIPTTEXTOUT ScriptTextOut = (LPFNSCRIPTTEXTOUT) GetOriginalScriptTextOut();
+
 #if _DEBUG
 #define COLORIZED
 #endif
@@ -54,14 +56,14 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptTextOut(
 	COLORREF OriginalColor;
 #endif
 
-	if(IsGraphiteFont(hdc))
+	if (IsGraphiteFont(hdc))
 	{
-	const_cast<SCRIPT_ANALYSIS *>(psa)->eScript = SCRIPT_UNDEFINED; // it seems that the script engine's text out may be trying to do special things especially in the case of arabic
+		const_cast<SCRIPT_ANALYSIS *>(psa)->eScript = SCRIPT_UNDEFINED; // it seems that the script engine's text out may be trying to do special things especially in the case of arabic
 
 #if defined(COLORIZED)
 		OriginalColor = SetTextColor(hdc, RGB(0,128,0));	// dark green = Graphite font
 #endif
-  }
+	}
 #if defined(COLORIZED)
 	else
 	{
@@ -69,15 +71,18 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptTextOut(
 	}
 #endif
 
-HRESULT	hResult = ScriptTextOut(hdc,psc,x,y,fuOptions,lprc,psa,pwcReserved,iReserved,pwGlyphs,cGlyphs,piAdvance,piJustify,pGoffset);
+	HRESULT	hResult = ScriptTextOut(hdc, psc, x, y, fuOptions, lprc, psa, pwcReserved,
+		iReserved, pwGlyphs, cGlyphs, piAdvance, piJustify, pGoffset);
 
 #if defined(COLORIZED)
 	SetTextColor(hdc, OriginalColor);
 #endif
 
-  return hResult;
-//	WRAP_END
+	return hResult;
+
+	//	WRAP_END
 }
+
 //#ifdef __cplusplus
 //}
 //#endif

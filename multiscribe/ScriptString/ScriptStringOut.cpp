@@ -1,4 +1,5 @@
 #include "../stdafx.h"
+
 #ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptStringOut=" USP10DLL ".ScriptStringOut")
 #endif
@@ -9,8 +10,6 @@
 
 LPVOID GetOriginalScriptStringOut();
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
-///   ScriptStringOut
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTSTRINGOUT)(
 	__in_ecount(1) SCRIPT_STRING_ANALYSIS   ssa,            //In  Analysis with glyphs
 	int                                     iX,             //In
@@ -36,8 +35,10 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringOut(
 	BOOL                                    fDisabled)      //In  If disabled, only the background is highlighted.
 {
 	//GRAPHITE_SCRIPT_STRING_ANALYSIS *pgssa = GetGraphiteScriptStringAnalysis(ssa);
+
 	HDC hdc = NULL;
-	//if(pgssa){
+
+	//if(pgssa) {
 	//	hdc = pgssa->hdc;
 	//	assert(hdc);
 	//	if(!hdc){
@@ -54,11 +55,11 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringOut(
 	//		}
 	//	}
 
-	//	if (uOptions & ETO_CLIPPED){
+	//	if (uOptions & ETO_CLIPPED) {
 	//	}
 
 	//	COLORREF textColor;
-	//	if(iMinSel < iMaxSel){ //TODO
+	//	if (iMinSel < iMaxSel) { //TODO
 	//		textColor = (fDisabled)? OriginalTextColor: COLOR_HIGHLIGHTTEXT;
 	//	}
 
@@ -81,19 +82,21 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptStringOut(
 	//	SetBkMode(hdc, OriginalBackMode);
 	//	return S_OK;
 	//}
-	//else{
+	//else {
 		LPFNSCRIPTSTRINGOUT ScriptStringOut = (LPFNSCRIPTSTRINGOUT) GetOriginalScriptStringOut();
 
 		HDC* phdc = (HDC*) ssa;
 		hdc = *phdc;
-		COLORREF OriginalTextColor = SetTextColor(hdc, RGB(IsGraphiteFont(hdc)?128:255,0,0));
+		COLORREF OriginalTextColor = SetTextColor(hdc, RGB( (IsGraphiteFont(hdc) ? 128 : 255), 0, 0));
 
 		hResult = ScriptStringOut(ssa, iX,iY, uOptions, prc, iMinSel, iMaxSel, fDisabled);
 		SetTextColor(hdc, OriginalTextColor);
 	//}
 
 }
+
 #ifdef __cplusplus
 }
 #endif
-#endif COLORIZED
+
+#endif COLORIZE_SCRIPTSTRINGOUT

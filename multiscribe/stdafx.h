@@ -5,24 +5,24 @@
 
 #pragma once
 
-// there are two modes in which this module can be created and run.
-// Impersonating Usp10: the real usp10.dll must be renamed and this
-//                      dll must have the name usp10.dll and all the
-//                      entry points must either have code or be forwarded
-//                      build system must define IMPERSONATE_USP10
-// Linked: the real usp10.dll doesn't have to be renamed. Instead
-//         name this dll something like multiscribe.dll and have an
-//         application that wants to use it, call LoadLibrary("multiscribe.dll")
-//         it has no entry points (except dllmain)
+// There are two modes in which this module can be created and run:
+// Impersonating Usp10: the real usp10.dll must be renamed and this dll must have
+//		the name usp10.dll and all the entry points must either have code or be forwarded
+//		build system must define IMPERSONATE_USP10.
+// Linked: the real usp10.dll doesn't have to be renamed. Instead name this DLL
+//		something like multiscribe.dll and have an application that wants to use it
+//		call LoadLibrary("multiscribe.dll"); it has no entry points (except dllmain).
 
 
 
 #ifndef IMPERSONATE_USP10
 #undef USP10DLL
+// Use the real name.
 #define USP10DLL "usp10"
 #endif
 
 #ifndef USP10DLL
+// Use our fake name.
 #define USP10DLL "_usp10"
 #endif
 
@@ -78,6 +78,7 @@
 //#define UNISCRIBE_OPENTYPE 0x0100
 
 #define INTERCEPT_SCRIPTITEMIZE 1
+//#define INTERCEPT_SCRIPTITEMIZEOPENTYPE 1
 
 #include <usp10.h>
 #include <assert.h>
@@ -100,6 +101,7 @@
 #include <math.h>
 
 //#if USPBUILD <= 0400
+
 typedef ULONG OPENTYPE_TAG;
 
 typedef struct opentype_feature_record{
@@ -121,7 +123,8 @@ typedef struct script_glyphprop {
 	SCRIPT_VISATTR sva;
 	WORD reserved;
 } SCRIPT_GLYPHPROP;
-//#endif
+
+//#endif // USPBUILD <= 0400
 
 bool IsGraphiteFont(HDC hdc);
 

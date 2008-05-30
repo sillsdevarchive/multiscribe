@@ -1,7 +1,9 @@
 #include "../stdafx.h"
+
 #ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptJustify=" USP10DLL ".ScriptJustify")
 #endif
+
 /////   ScriptJustify
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTJUSTIFY)(
 //    __in_ecount(cGlyphs) const SCRIPT_VISATTR   *psva,          // In   Collected visual attributes for entire line

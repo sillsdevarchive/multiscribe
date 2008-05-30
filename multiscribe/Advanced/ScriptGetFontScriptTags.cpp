@@ -1,4 +1,5 @@
 #include "../stdafx.h"
+
 #ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptGetFontScriptTags=" USP10DLL ".ScriptGetFontScriptTags")
 #endif

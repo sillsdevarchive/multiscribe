@@ -1,7 +1,9 @@
 #include "../stdafx.h"
+
 #ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptRecordDigitSubstitution=" USP10DLL ".ScriptRecordDigitSubstitution")
 #endif
+
 /////   ScriptRecordDigitSubstitution
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTRECORDDIGITSUBSTITUTION)(
 //    LCID                                    Locale,     // In   LOCALE_USER_DEFAULT or desired locale

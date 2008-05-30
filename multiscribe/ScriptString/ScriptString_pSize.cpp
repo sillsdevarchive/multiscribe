@@ -1,7 +1,7 @@
 #include "../stdafx.h"
+
 //#include "../GraphiteScriptStringAnalysis.h"
 //#include <math.h>
-//
 
 #ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptString_pSize=" USP10DLL ".ScriptString_pSize")

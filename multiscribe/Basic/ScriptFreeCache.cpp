@@ -7,7 +7,6 @@
 
 LPVOID GetOriginalScriptFreeCache();
 
-/////   ScriptFreeCache
 typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTFREECACHE) (
 	__deref_inout_ecount(1) SCRIPT_CACHE   *psc);       //InOut  Cache handle
 

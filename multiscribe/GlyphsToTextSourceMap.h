@@ -4,11 +4,11 @@
 #include <vector>
 #include "TextSource.h"
 
-struct GlyphPositions{
+struct GlyphPositions {
 	std::vector<int> advanceWidths;
 	std::vector<GOFFSET> goffsets;
 	ABC abc;
-  std::basic_string<WORD> glyphs;
+	std::basic_string<WORD> glyphs;
 };
 
 typedef std::map<LPVOID, GlyphPositions> GLYPHPOSITIONS_MAP;

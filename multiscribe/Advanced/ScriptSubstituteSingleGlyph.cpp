@@ -1,4 +1,5 @@
 #include "../stdafx.h"
+
 #ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptSubstituteSingleGlyph=" USP10DLL ".ScriptSubstituteSingleGlyph")
 #endif
