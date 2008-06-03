@@ -3,8 +3,8 @@
 
 !insertmacro VersionCompare
 
-!define VERSION "0.1"
-!define WINDOWS_VERSION "${VERSION}.0.0"
+!define VERSION "0.3"
+!define WINDOWS_VERSION "1.${VERSION}.0"
 
 Name "MultiScribe Installer"
 Outfile "multiscribe_${VERSION}.exe"
@@ -17,6 +17,7 @@ InstType /COMPONENTSONLYONCUSTOM
 InstType "Insert"
 InstType "Remove"
 
+!insertmacro MUI_PAGE_LICENSE "..\License_LGPLv21.txt"
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES

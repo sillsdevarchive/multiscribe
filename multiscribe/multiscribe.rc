@@ -52,8 +52,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,2008,05,30
- PRODUCTVERSION 0,2008,05,30
+ FILEVERSION 1,0,3,0
+ PRODUCTVERSION 1,0,3,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -74,12 +74,12 @@ BEGIN
 			VALUE "Comments", ""
 #endif
 			VALUE "FileDescription", "Multiscribe - a graphite wrapper around Uniscribe"
-			VALUE "FileVersion", "0.2008.05.30"
+			VALUE "FileVersion", "1:0.3.0"
 			VALUE "InternalName", "multiscribe"
 			VALUE "LegalCopyright", "Copyright (C) 2007"
 			VALUE "OriginalFilename", "multiscribe"
 			VALUE "ProductName", "Multiscribe - a graphite wrapper around Uniscribe"
-			VALUE "ProductVersion", "0.2008.05.30"
+			VALUE "ProductVersion", "1:0.3.0"
 		END
 	END
 	BLOCK "VarFileInfo"
