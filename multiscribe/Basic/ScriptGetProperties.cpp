@@ -63,18 +63,6 @@ const SCRIPT_PROPERTIES * GetScriptPropertiesOfEngine(int i)
 
 
 
-#ifndef IMPERSONATE_USP10
-
-__checkReturn HRESULT WINAPI GraphiteEnabledScriptGetProperties(
-	__deref_out_ecount(1) const SCRIPT_PROPERTIES   ***pppSp,       // Out  Receives pointer to table of pointers to properties indexed by script
-	__out_ecount(1) int                             *piNumScripts)  // Out  Receives number of scripts (valid values are 0 through NumScripts-1)
-{
-	return E_NOTIMPL;
-}
-
-#endif // !IMPERSONATE_USP10
-
-
 //int GetGraphiteScriptId(){
 //	return giNumScripts - 1;
 //}

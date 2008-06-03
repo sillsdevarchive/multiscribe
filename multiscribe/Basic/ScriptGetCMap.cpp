@@ -34,17 +34,3 @@ __checkReturn HRESULT WINAPI GraphiteEnabledScriptGetCMap(
 #endif //IMPERSONATE_USP10
 
 
-#ifndef IMPERSONATE_USP10
-
-__checkReturn HRESULT WINAPI GraphiteEnabledScriptGetCMap(
-	HDC                                     hdc,            // In    Optional (see notes on caching)
-	__deref_inout_ecount(1) SCRIPT_CACHE    *psc,           // InOut Address of Cache handle
-	__in_ecount(cChars) const WCHAR         *pwcInChars,    // In    Unicode codepoint(s) to look up
-	int                                     cChars,         // In    Number of characters
-	DWORD                                   dwFlags,        // In    Flags such as SGCM_RTL
-	__out_ecount(cChars) WORD               *pwOutGlyphs)   // Out   Array of glyphs, one per input character
-{
-	return E_NOTIMPL;
-}
-
-#endif // !IMPERSONATE_USP10
