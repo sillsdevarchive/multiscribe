@@ -1,6 +1,8 @@
 #include "../stdafx.h"
 
+#ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptGetLogicalWidths=" USP10DLL ".ScriptGetLogicalWidths")
+#endif
 
 /////   ScriptGetLogicalWidths
 //typedef __checkReturn HRESULT (CALLBACK* LPFNSCRIPTGETLOGICALWIDTHS)(

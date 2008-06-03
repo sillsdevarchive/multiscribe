@@ -1,6 +1,8 @@
 #include "../stdafx.h"
 
+#ifdef IMPERSONATE_USP10
 #pragma comment(linker, "/export:ScriptGetGlyphABCWidth=" USP10DLL ".ScriptGetGlyphABCWidth")
+#endif
 
 ///////   ScriptGetGlyphABCWidth
 //

@@ -6,10 +6,6 @@
 #include "GlyphsToTextSourceMap.h"
 #include "interceptor.h"
 
-__declspec(dllexport) void DoNothing()
-{
-}
-
 float round(float f) {
 	int sign = (f < 0) ? -1 : 1;
 	f *= sign;
